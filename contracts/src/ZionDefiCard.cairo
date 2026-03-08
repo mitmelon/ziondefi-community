@@ -32,7 +32,6 @@ mod ZionDefiCard {
     use ziondefi::interfaces::{
         IZionDefiFactoryDispatcher, IZionDefiFactoryDispatcherTrait,
     };
-    use ziondefi::helpers;
     use ziondefi::Price_Oracle;
     use ziondefi::pin_component::PinComponent;
 
@@ -102,7 +101,6 @@ mod ZionDefiCard {
         transfer_counter: u64,
         relayer_yield_access: Map<ContractAddress, bool>,
         extra_relayers: Map<ContractAddress, bool>,
-        /// Index → address for extra relayers (for enumeration in get_relayers).
         relayer_list: Map<u32, ContractAddress>,
         relayer_count: u32,
     }
