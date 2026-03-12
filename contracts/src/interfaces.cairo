@@ -96,8 +96,8 @@ pub trait IZionDefiCard<TContractState> {
     fn get_request_counter(self: @TContractState) -> u64;
 
     // ---- Yield Access (owner + PIN) ----------------------------------------
-    fn grant_relayer_yield_access(ref self: TContractState, token: ContractAddress, sig_r: felt252, sig_s: felt252);
-    fn revoke_relayer_yield_access(ref self: TContractState, token: ContractAddress, sig_r: felt252, sig_s: felt252);
+    fn grant_relayer_yield_access(ref self: TContractState, sig_r: felt252, sig_s: felt252);
+    fn revoke_relayer_yield_access(ref self: TContractState, sig_r: felt252, sig_s: felt252);
     fn is_relayer_yield_access_granted(self: @TContractState, token: ContractAddress) -> bool;
 }
 

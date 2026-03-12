@@ -677,17 +677,36 @@ mod ZionDefiCard {
             self.transfer_delay.write(new_delay);
         }
 
-        fn grant_relayer_yield_access(ref self: ContractState, token: ContractAddress, sig_r: felt252, sig_s: felt252) {
+        fn grant_relayer_yield_access(ref self: ContractState, sig_r: felt252, sig_s: felt252) {
             self._assert_owner_pin(sig_r, sig_s);
-            assert(!token.is_zero(), 'Invalid token');
-            self.relayer_yield_access.entry(token).write(true);
-            self.emit(RelayerYieldAccessGranted { token, timestamp: get_block_timestamp() });
+            let count = self.currency_count.read();
+            let ts = get_block_timestamp();
+            let mut i: u32 = 0;
+            loop {
+                if i >= count { break; }
+                let token = self.accepted_currencies.entry(i).read();
+                if self.is_currency_accepted.entry(token).read() {
+                    self.relayer_yield_access.entry(token).write(true);
+                    self.emit(RelayerYieldAccessGranted { token, timestamp: ts });
+                }
+                i += 1;
+            };
         }
 
-        fn revoke_relayer_yield_access(ref self: ContractState, token: ContractAddress, sig_r: felt252, sig_s: felt252) {
+        fn revoke_relayer_yield_access(ref self: ContractState, sig_r: felt252, sig_s: felt252) {
             self._assert_owner_pin(sig_r, sig_s);
-            self.relayer_yield_access.entry(token).write(false);
-            self.emit(RelayerYieldAccessRevoked { token, timestamp: get_block_timestamp() });
+            let count = self.currency_count.read();
+            let ts = get_block_timestamp();
+            let mut i: u32 = 0;
+            loop {
+                if i >= count { break; }
+                let token = self.accepted_currencies.entry(i).read();
+                if self.is_currency_accepted.entry(token).read() {
+                    self.relayer_yield_access.entry(token).write(false);
+                    self.emit(RelayerYieldAccessRevoked { token, timestamp: ts });
+                }
+                i += 1;
+            };
         }
 
         fn is_relayer_yield_access_granted(self: @ContractState, token: ContractAddress) -> bool {
