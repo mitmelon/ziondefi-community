@@ -14,6 +14,8 @@ module.exports = {
         'dropdown-enter',
         'dropdown-active',
         'transition-card',
+        'rotate-90',
+        'hidden',
         { pattern: /^(md|sm|lg):/ },
         { pattern: /^(hover|group-hover|focus|active):/ }
     ],

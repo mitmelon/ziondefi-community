@@ -929,12 +929,10 @@ mod ZionDefiCard {
         }
 
         fn get_pin_public_key(self: @ContractState, user: ContractAddress) -> felt252 {
-            self._assert_owner_or_relayer();
             self.pin.get_pin_public_key(user)
         }
 
         fn get_pin_nonce(self: @ContractState, user: ContractAddress) -> felt252 {
-            self._assert_owner_or_relayer();
             self.pin.get_pin_nonce(user)
         }
 

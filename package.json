@@ -45,6 +45,7 @@
     "amqplib": "^0.10.9",
     "axios": "^1.13.5",
     "bcrypt": "^6.0.0",
+    "bybit-api": "^4.6.1",
     "cheerio": "^1.2.0",
     "countries-and-timezones": "^3.8.0",
     "crypto": "^1.0.1",
