@@ -641,7 +641,6 @@ class StarknetCardService {
     async getPinNonce(user) {
         const wallet = await this._getRelayerWallet();
         const result = await this._view('get_pin_nonce', [user], wallet);
-        console.log(result);
         return Number(result);
     }
 
@@ -757,15 +756,17 @@ class StarknetCardService {
         const res = await this._view('get_balance_summary');
         const n = Number(BigInt(res[0]));
         const balances = [];
+        // TokenBalance now contains: token, balance(u256), contract_balance(u256), last_updated
+        // Each u256 is returned as two felts (low, high) so stride = 6
         for (let i = 0; i < n; i++) {
-            const base = 1 + i * 4;
-            balances.push({
-                token: res[base],
-                balance: BigInt(res[base + 1]) + (BigInt(res[base + 2]) << 128n),
-                last_updated: Number(BigInt(res[base + 3])),
-            });
+            const base = 1 + i * 6;
+            const token = res[base];
+            const balance = BigInt(res[base + 1]) + (BigInt(res[base + 2]) << 128n);
+            const contractBalance = BigInt(res[base + 3]) + (BigInt(res[base + 4]) << 128n);
+            const lastUpdated = Number(BigInt(res[base + 5]));
+            balances.push({ token, balance, contract_balance: contractBalance, last_updated: lastUpdated });
         }
-        const tvBase = 1 + n * 4;
+        const tvBase = 1 + n * 6;
         const totalValueUsd = BigInt(res[tvBase]) + (BigInt(res[tvBase + 1]) << 128n);
         return { balances, totalValueUsd };
     }
@@ -1191,7 +1192,7 @@ class StarknetCardService {
         const stakeableTokens = await sdk.stakingTokens();
         const presets = isLive ? mainnetValidators : sepoliaValidators;
         const validators = Object.values(presets).map(v => ({
-            name: v.name,
+            name:          v.name,
             stakerAddress: v.stakerAddress,
         }));
 
@@ -1200,9 +1201,28 @@ class StarknetCardService {
             try {
                 const pools = await sdk.getStakerPools(validator.stakerAddress);
                 for (const pool of (pools || [])) {
+                    // pool.address may be a Starkzap Address object — extract the hex string
+                    let poolAddr = pool.address || pool;
+                    if (typeof poolAddr === 'object' && poolAddr !== null) {
+                        poolAddr = poolAddr.address
+                            || poolAddr.contract_address
+                            || poolAddr.value
+                            || poolAddr.hex
+                            || Object.values(poolAddr).find(v => typeof v === 'string' && v.startsWith('0x'))
+                            || null;
+                    }
+                    if (typeof poolAddr !== 'string') {
+                        poolAddr = poolAddr?.toString?.() || null;
+                    }
+                    // Normalize to hex string
+                    if (poolAddr && !poolAddr.startsWith('0x')) {
+                        try { poolAddr = '0x' + BigInt(poolAddr).toString(16); } catch { poolAddr = null; }
+                    }
+                    if (!poolAddr) continue;
+
                     allPools.push({
-                        pool_address: pool.address || String(pool),
-                        validator_name: validator.name,
+                        pool_address:      poolAddr,
+                        validator_name:    validator.name,
                         validator_address: validator.stakerAddress,
                     });
                 }

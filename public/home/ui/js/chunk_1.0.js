@@ -18,7 +18,7 @@ async function initBridgeFlow(id) {
         const dropdownMenu = document.getElementById('source-dropdown-menu');
         const searchInput = document.getElementById('source-search');
 
-        if(dropdownBtn && dropdownMenu && searchInput && $('#source-selector-container').length > 0) {
+        if (dropdownBtn && dropdownMenu && searchInput && $('#source-selector-container').length > 0) {
             dropdownBtn.onclick = function (e) {
                 e.stopPropagation();
                 dropdownMenu.classList.toggle('hidden');
@@ -211,7 +211,7 @@ $(document).on("click", ".startBridgeDeposit", function (e) {
                             } else if (status === 'failed' || status === 'expired' || status === 'cancelled' || status === 'refunded') {
                                 document.getElementById('card-loader').innerHTML = '<i class="ph-bold ph-warning-circle text-red-600 text-4xl"></i>';
                                 document.getElementById('card-deployed').textContent = window.__CARD_LANG.bridge_payment_failed || 'Payment Failed';
-                                document.getElementById('card-description').textContent = window.__CARD_LANG.bridge_payment_failed_desc ||'The swap failed or expired. Any sent funds have been refunded.';
+                                document.getElementById('card-description').textContent = window.__CARD_LANG.bridge_payment_failed_desc || 'The swap failed or expired. Any sent funds have been refunded.';
                                 return true; // Stops the poller
                             } else if (status === 'ls_transfer_pending') {
                                 document.getElementById('card-deployed').textContent = window.__CARD_LANG.bridge_payment_pending || 'Bridging in progress...';
@@ -282,10 +282,10 @@ $(document).on('click', '.enable-zara-btn', function (e) {
             //open modal
             $('#modalScreen').html(data.modalHtml);
             modalController(data.modalId, { bgClose: false, keyboard: false })
-            .then(modal => {
-                modal.show();
-                modal.setSize('full');
-            })
+                .then(modal => {
+                    modal.show();
+                    modal.setSize('full');
+                })
         }
 
     }, 'themeLoader');
@@ -313,19 +313,19 @@ function _renderZaraLog(item) {
     var summary = item.summary || '';
 
     var iconHtml = '<div class="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 text-slate-500">' +
-                    '<i class="ph-bold ph-bell text-base"></i>' +
-                   '</div>';
+        '<i class="ph-bold ph-bell text-base"></i>' +
+        '</div>';
 
     return '<div class="px-4 py-3 border-b border-slate-100">' +
         '<div class="flex items-center justify-between mb-1">' +
-            '<div class="flex items-center gap-3">' +
-                iconHtml +
-                '<div class="text-sm font-semibold text-slate-800">' + actionLabel + '</div>' +
-            '</div>' +
-            '<div class="text-[10px] text-slate-400">' + item.created_at + '</div>' +
+        '<div class="flex items-center gap-3">' +
+        iconHtml +
+        '<div class="text-sm font-semibold text-slate-800">' + actionLabel + '</div>' +
+        '</div>' +
+        '<div class="text-[10px] text-slate-400">' + item.created_at + '</div>' +
         '</div>' +
         '<div class="text-[13px] text-slate-600">' + summary + '</div>' +
-    '</div>';
+        '</div>';
 }
 
 function _loadZaraLogs(page) {
@@ -337,16 +337,16 @@ function _loadZaraLogs(page) {
     formData.append('page', page);
     formData.append('limit', 20);
 
-     general.ajaxFormData(null, 'POST', '/home/zara/logs', formData, null, null, function (data) {
+    general.ajaxFormData(null, 'POST', '/home/zara/logs', formData, null, null, function (data) {
         _zaraLoading = false;
         $('#zara-log-loader').addClass('hidden');
-        if (data.status !== 200){
-             $('#zara-log-loader').addClass('hidden');
-             return;
+        if (data.status !== 200) {
+            $('#zara-log-loader').addClass('hidden');
+            return;
         }
 
         var items = data.data || [];
-        var meta  = data.meta || {};
+        var meta = data.meta || {};
         _zaraHasMore = meta.has_more || false;
 
         if (items.length === 0 && page === 1) {
@@ -388,8 +388,10 @@ function _initZaraFeed() {
 
 function _fillDashboardStats(data) {
     var balances = data.balances || {};
-    var stakes   = data.stakes   || {};
-    var stats    = data.stats    || {};
+    var stakes = data.stakes || {};
+    var stats = data.stats || {};
+
+    console.log(data);
 
     var totalUsd = parseFloat(balances.totalUsd || 0);
     var $widget = $('#card-balance-widget');
@@ -410,7 +412,7 @@ function _fillDashboardStats(data) {
     $yield.html(yieldUsd > 0
         ? '<span class="text-emerald-500">$' + yieldUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>'
         : '<span class="text-slate-300 text-base">$0.00</span>');
-   
+
     var $badge = $('#zara-status-badge');
     if (stats.agent_active) {
         $badge.html('<span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse inline-block"></span> Active')
@@ -422,44 +424,88 @@ function _fillDashboardStats(data) {
             .addClass('bg-slate-100 text-slate-500');
     }
 
-    var assetList = balances.balances || [];
-    var $strip    = $('#assets-staked-strip');
-    if (assetList.length > 0) {
-        var chips = assetList.map(function (a) {
-            var usd = parseFloat(a.amountUsd || a.balance_usd || 0).toFixed(2);
-            var amt = parseFloat(a.amount || a.balance_human || a.balance || 0).toFixed(4);
-            var sym = a.token || a.symbol || a.currency || '?';
-            return '<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200 text-slate-600 text-xs font-medium">' +
-                '<span class="font-bold">' + sym + '</span>' +
-                '<span class="text-slate-400">' + amt + '</span>' +
-                '<span class="text-slate-300">\u00b7</span>' +
-                '<span>$' + usd + '</span>' +
-                '</span>';
-        }).join('');
-        $strip.html(chips);
-        $('#assets-total-label').text('$' + totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    } else {
-        $strip.html('<span class="text-xs text-slate-400">No assets on card yet</span>');
-    }
-
     var positions = stakes.positions || [];
-    var $stakeList = $('#staking-positions-list');
+    var $stakeList = $('#assets-staked-strip');
     if ($stakeList.length && positions.length > 0) {
         var rows = positions.map(function (p) {
-            var m = p.metadata || {};
-            var staked = parseFloat(m.staked_amount || 0).toFixed(4);
-            var stakedUsdPos = parseFloat(m.staked_amount_usd || 0).toFixed(2);
-            var yield_ = parseFloat(m.yield_earned || 0).toFixed(4);
-            var pool = (m.pool_address || '').slice(0, 10) + '...';
-            var token = (m.token_address || '').slice(0, 6).toUpperCase();
-            var lastAction = m.last_action || 'staked';
-            return '<div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 text-xs">' +
-                '<div class="flex flex-col"><span class="font-medium text-slate-700">' + token + '</span><span class="text-slate-400">' + pool + '</span></div>' +
-                '<div class="text-right"><div class="font-medium text-slate-700">' + staked + ' <span class="text-slate-400">($' + stakedUsdPos + ')</span></div>' +
-                '<div class="text-emerald-500">+' + yield_ + ' yield</div></div>' +
-                '</div>';
+            var staked = parseFloat(p.amount_staked || p.amount || 0).toFixed(4);
+            var stakedUsd = parseFloat(p.staked_amount_usd || p.amount_usd || 0).toFixed(2);
+            var yieldEarned = parseFloat(p.yield_earned_usd || p.total_rewards_claimed || 0).toFixed(4);
+            var poolFull = p.pool_address || p.pool || '';
+            var pool = poolFull ? (poolFull.slice(0, 6) + '...' + poolFull.slice(-4)) : '—';
+            var validator = p.validator_name || p.validatorName || '';
+            var token = (p.token_symbol || p.symbol || 'UNKNOWN').toString();
+            var tokenLabel = token.length > 8 ? token.slice(0, 8) : token;
+            var initial = tokenLabel.charAt(0) || '?';
+            var lastAction = p.last_compounded_at
+                ? new Date(p.last_compounded_at * 1000).toLocaleDateString()
+                : (p.staked_at ? new Date(p.staked_at * 1000).toLocaleDateString() : '—');
+
+            var tokenColors = {
+                'S': 'bg-indigo-50 text-indigo-600',
+                'E': 'bg-blue-50 text-blue-600',
+                'U': 'bg-green-50 text-green-600',
+                'W': 'bg-orange-50 text-orange-600',
+            };
+            var avatarClass = tokenColors[initial] || 'bg-slate-100 text-slate-600';
+
+            return [
+                '<div class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex flex-col">',
+
+                // ── Header band ──
+                '<div class="flex items-center justify-between px-4 pt-4 pb-3 border-b border-slate-50">',
+                '<div class="flex items-center gap-3">',
+                '<div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ' + avatarClass + '">',
+                initial,
+                '</div>',
+                '<div class="leading-tight">',
+                '<p class="text-sm font-semibold text-slate-800">' + tokenLabel + '</p>',
+                validator ? '<p class="text-[11px] text-slate-400 truncate max-w-[120px]">' + validator + '</p>' : '',
+                '</div>',
+                '</div>',
+                '<div class="text-right leading-tight">',
+                '<p class="text-sm font-bold text-slate-800">' + staked + '</p>',
+                '<p class="text-[11px] text-slate-400">~$' + stakedUsd + '</p>',
+                '</div>',
+                '</div>',
+
+                // ── Body ──
+                '<div class="px-4 py-3 flex flex-col gap-2 flex-1">',
+
+                // Yield row
+                '<div class="flex items-center justify-between">',
+                '<span class="text-xs text-slate-500">Yield earned</span>',
+                '<span class="text-xs font-semibold text-emerald-500">+' + yieldEarned + '</span>',
+                '</div>',
+
+                // Pool row
+                '<div class="flex items-center justify-between">',
+                '<span class="text-xs text-slate-500">Pool</span>',
+                '<span class="text-[11px] font-mono text-slate-400">' + pool + '</span>',
+                '</div>',
+
+                // Last action row
+                '<div class="flex items-center justify-between">',
+                '<span class="text-xs text-slate-500">Last action</span>',
+                '<span class="text-xs font-medium text-slate-600">' + lastAction + '</span>',
+                '</div>',
+
+                '</div>',
+
+                // ── Footer pill ──
+                '<div class="px-4 pb-4">',
+                '<div class="rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-medium text-center py-1.5">',
+                'Active',
+                '</div>',
+                '</div>',
+
+                '</div>',
+            ].join('');
         }).join('');
-        $stakeList.html(rows);
+
+        $stakeList.html(
+            '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">' + rows + '</div>'
+        );
     }
 }
 
@@ -514,7 +560,7 @@ $(window).on('load', function () {
     }
 
     (function () {
-        var cb    = document.getElementById('go-live-toggle');
+        var cb = document.getElementById('go-live-toggle');
         var track = document.getElementById('mode-toggle-track');
         if (!cb || !track) return;
 
@@ -529,14 +575,14 @@ $(window).on('load', function () {
             if (_busy) return;
             _busy = true;
 
-            var isLive  = cb.checked;
-            var $label  = $('#live-text');
+            var isLive = cb.checked;
+            var $label = $('#live-text');
 
             // Optimistic UI
             track.classList.toggle('is-live', isLive);
             $label.text(isLive ? 'Live' : 'Test')
-                  .toggleClass('text-green-600', isLive)
-                  .toggleClass('text-zinc-500',  !isLive);
+                .toggleClass('text-green-600', isLive)
+                .toggleClass('text-zinc-500', !isLive);
 
             var formData = new FormData();
             formData.append('live', isLive);
@@ -551,8 +597,8 @@ $(window).on('load', function () {
                     cb.checked = !isLive;
                     track.classList.toggle('is-live', !isLive);
                     $label.text(!isLive ? 'Live' : 'Test')
-                          .toggleClass('text-green-600', !isLive)
-                          .toggleClass('text-zinc-500',  isLive);
+                        .toggleClass('text-green-600', !isLive)
+                        .toggleClass('text-zinc-500', isLive);
                 }
             }, 'themeLoader');
         });
@@ -560,7 +606,7 @@ $(window).on('load', function () {
     (function () {
         function bindDropdown(triggerId, menuId) {
             var trigger = document.getElementById(triggerId);
-            var menu    = document.getElementById(menuId);
+            var menu = document.getElementById(menuId);
             if (!trigger || !menu) return;
             trigger.addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -573,7 +619,7 @@ $(window).on('load', function () {
             });
         }
         bindDropdown('user-menu-trigger', 'user-dropdown');
-        bindDropdown('openNotification',  'notif-dropdown');
+        bindDropdown('openNotification', 'notif-dropdown');
     })();
 
     $(document).on("click", ".create-card-btn", function (e) {
@@ -654,18 +700,18 @@ $(window).on('load', function () {
                         modal.setSize('full');
                     })
 
-                    if(cardId !== undefined && cardId !== null && cardId !== '' && cardId !== 'none') {
-                        console.log("Initializing bridge flow for card ID:", cardId);
-                        initBridgeFlow(cardId);
-                      
-                        if(document.getElementById('bridge-amount')) {
-                            document.getElementById('bridge-amount').addEventListener('input', (e) => {
-                                currentSwapConfig.amount = e.target.value;
-                                processQuoteFetch();
-                            });
-                        }
-                        
+                if (cardId !== undefined && cardId !== null && cardId !== '' && cardId !== 'none') {
+                    console.log("Initializing bridge flow for card ID:", cardId);
+                    initBridgeFlow(cardId);
+
+                    if (document.getElementById('bridge-amount')) {
+                        document.getElementById('bridge-amount').addEventListener('input', (e) => {
+                            currentSwapConfig.amount = e.target.value;
+                            processQuoteFetch();
+                        });
                     }
+
+                }
             }
         }, 'centerLoader');
     });
@@ -703,12 +749,12 @@ $(window).on('load', function () {
                 //open modal
                 $('#modalScreen').html(data.modalHtml);
                 modalController(data.modalId, { bgClose: false, keyboard: false })
-                .then(modal => {
-                    modal.show();
-                    modal.setSize('full');
-                })
+                    .then(modal => {
+                        modal.show();
+                        modal.setSize('full');
+                    })
             }
 
-        }, 'themeLoader'); 
+        }, 'themeLoader');
     });
 });

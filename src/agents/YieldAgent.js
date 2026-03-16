@@ -43,11 +43,11 @@ class YieldAgent {
             privateKey: config.relayerPrivateKey,
         };
         this.isLive = config.isLive !== undefined ? config.isLive : true;
-        
+
         if (!config.mongoClient) {
             throw new Error('mongoClient is required');
         }
-        
+
         this.cardService = null; // Lazy-initialized
         this.tracker = new StakeTracker(
             config.card.address,
@@ -73,7 +73,7 @@ class YieldAgent {
      */
     async initialize() {
         console.log(`[YieldAgent] Initializing for card ${this.cardAddress}...`);
-        
+
         this.cardService = await StarknetCardService.create({
             cardAddress: this.cardAddress,
             relayerAddress: this.relayerAccount.address,
@@ -109,12 +109,16 @@ class YieldAgent {
             }
 
             // Discover stakeable tokens and pools
-            const stakeableTokens = await this.cardService. discoverStakingPools(this.isLive);
+            const stakeableTokens = await this.cardService.discoverStakingPools(this.isLive);
             const validators = this.cardService.getValidators();
 
             // Ask Nova to analyze and decide which tokens to stake
             const decision = await this.nova.analyzeStakingOpportunity({
-                balances: balances.balances,
+                balances: balances.balances.map(b => ({
+                    ...b,
+                    balance: b.balance.toString(),
+                    balance_human: (Number(BigInt(b.balance.toString())) / (10 ** 18)).toFixed(6), // Nova reads this
+                })),
                 stakeableTokens,
                 validators,
                 bufferPercent: BUFFER_PERCENT,
@@ -162,6 +166,8 @@ class YieldAgent {
                 successful: successCount,
                 failed: actions.length - successCount,
             });
+
+            
 
             console.log(`\n[YieldAgent] ═══ Cycle Complete: ${actions.length} actions ═══\n`);
             return { success: true, actions, reasoning: decision.reasoning };
@@ -469,12 +475,51 @@ class YieldAgent {
             tokenSymbol,
             tokenAddress,
             amountToStake,
-            poolAddress,
             validatorName,
             bufferLeft,
         } = recommendation;
 
-        console.log(`\n[YieldAgent] Staking ${amountToStake} ${tokenSymbol}`);
+        // Nova sometimes returns poolAddress as an object { address: "0x..." } instead of a plain string, so we need to handle both cases.
+        const poolAddress = typeof recommendation.poolAddress === 'object' && recommendation.poolAddress !== null
+            ? (recommendation.poolAddress.address || recommendation.poolAddress.pool_address || Object.values(recommendation.poolAddress)[0])
+            : recommendation.poolAddress;
+
+        if (!poolAddress || typeof poolAddress !== 'string' || !poolAddress.startsWith('0x')) {
+            throw new Error(`Invalid poolAddress from Nova: ${JSON.stringify(recommendation.poolAddress)}`);
+        }
+
+        const tokenDecimals = tokenSymbol === 'USDC' || tokenSymbol === 'USDT' ? 6
+            : tokenSymbol === 'WBTC' ? 8
+                : 18;
+
+        // Nova may return either a human amount ("5.6") or a raw wei string
+        // ("5600000000000000000") depending on what balances we fed it.
+        // Detect which one it is and normalise to human-readable for the SDK.
+        let amountHuman;
+        const amountStr = amountToStake.toString().trim();
+
+        if (amountStr.includes('.')) {
+            // Already human readable e.g. "5.6"
+            amountHuman = amountStr;
+        } else {
+            const raw = BigInt(amountStr);
+            const threshold = BigInt(10 ** Math.min(tokenDecimals, 12));
+            if (raw > threshold) {
+                // Raw wei — convert to human
+                amountHuman = (Number(raw) / (10 ** tokenDecimals)).toString();
+            } else {
+                // Small number — already human e.g. "5"
+                amountHuman = amountStr;
+            }
+        }
+
+        // Validate we have a sane amount before touching the chain
+        const amountFloat = parseFloat(amountHuman);
+        if (isNaN(amountFloat) || amountFloat <= 0) {
+            throw new Error(`Invalid stake amount resolved: "${amountHuman}" from input "${amountToStake}"`);
+        }
+
+        console.log(`\n[YieldAgent] Staking ${amountHuman} ${tokenSymbol}`);
         console.log(`[YieldAgent] Pool: ${poolAddress}`);
         console.log(`[YieldAgent] Validator: ${validatorName}`);
         console.log(`[YieldAgent] Buffer left: ${bufferLeft}`);
@@ -488,24 +533,22 @@ class YieldAgent {
             );
         }
 
-        // Withdraw from card to relayer wallet
-        console.log(`[YieldAgent] Withdrawing ${amountToStake} ${tokenSymbol} from card...`);
+        console.log(`[YieldAgent] Withdrawing ${amountHuman} ${tokenSymbol} from card...`);
         const withdrawResult = await this.cardService.withdrawFunds(
             tokenAddress,
-            amountToStake,
-            null // uses relayer wallet by default
+            amountHuman,
+            null
         );
 
         console.log(`[YieldAgent] Withdraw tx: ${withdrawResult.explorerUrl}`);
 
-        // Wait for transfer delay, then finalize
+        // Wait for transfer delay then finalize
         const transferDelay = await this.cardService.getTransferDelay();
         const delaySeconds = Array.isArray(transferDelay) ? Number(transferDelay[0]) : Number(transferDelay);
 
         if (delaySeconds > 0) {
             console.log(`[YieldAgent] Waiting ${delaySeconds}s for transfer delay...`);
             await this._sleep(delaySeconds * 1000);
-
             console.log(`[YieldAgent] Finalizing transfer ${withdrawResult.transferId}...`);
             await this.cardService.finalizeTransfer(withdrawResult.transferId, null);
         }
@@ -515,20 +558,18 @@ class YieldAgent {
 
         let stakeTx;
         if (!isMember) {
-            // First time: enterPool
             stakeTx = await this.cardService.enterStakingPool(
                 poolAddress,
                 tokenAddress,
-                amountToStake.toString(),
+                amountHuman,
                 this.relayerAccount,
                 'relayer_pays'
             );
         } else {
-            // Already member: just stake
             stakeTx = await this.cardService.stake(
                 poolAddress,
                 tokenAddress,
-                amountToStake.toString(),
+                amountHuman,
                 this.relayerAccount,
                 'relayer_pays'
             );
@@ -541,16 +582,16 @@ class YieldAgent {
             tokenAddress,
             tokenSymbol,
             validatorName,
-            amountStaked: parseFloat(amountToStake.replace(/[^\d.-]/g, '')),
+            amountStaked: amountFloat,
             txHash: stakeTx.txHash,
             explorerUrl: stakeTx.explorerUrl,
         });
 
-        await this._logActivity('stake_success', `Successfully staked ${amountToStake} ${tokenSymbol}`, {
+        await this._logActivity('stake_success', `Successfully staked ${amountHuman} ${tokenSymbol}`, {
             token: tokenSymbol,
             pool: poolAddress,
             validator: validatorName,
-            amount_staked: amountToStake,
+            amount_staked: amountHuman,
             buffer_left: bufferLeft,
             tx_hash: stakeTx.txHash,
             explorer_url: stakeTx.explorerUrl,
@@ -561,7 +602,7 @@ class YieldAgent {
         return {
             token: tokenSymbol,
             success: true,
-            amountStaked: amountToStake,
+            amountStaked: amountHuman,
             pool: poolAddress,
             validator: validatorName,
             txHash: stakeTx.txHash,

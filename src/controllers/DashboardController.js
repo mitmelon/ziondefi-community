@@ -110,7 +110,6 @@ module.exports = {
             ]);
 
             balances = balancesResult || {};
-           
             // Aggregate staking totals from stake_positions collection
             let totalStakedUsd = 0;
             let totalYieldUsd  = 0;
@@ -150,9 +149,6 @@ module.exports = {
             const yieldAgent = await req.models.Agent
                 .findOne({ owner_user_id: userId, name: 'zara', enabled: true })
                 .catch(() => null);
-            
-
-            
 
             stats = {
                 total_transactions: txCount,

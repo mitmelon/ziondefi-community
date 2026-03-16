@@ -23,10 +23,7 @@ const runningAgents = new Map();
 async function startAgentForCard(agentRecord, card, userId, mongoClient, isLive) {
     const agentKey = `${agentRecord.agent_id}_${card.card_id}`;
 
-    if (runningAgents.has(agentKey)) {
-        console.log(`[YieldWorker] Agent ${agentKey} already running`);
-        return;
-    }
+   
 
     const network = isLive ? 'mainnet' : 'testnet';
     console.log(`[YieldWorker] Starting agent ${agentKey} on ${network}`);

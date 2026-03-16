@@ -53,7 +53,7 @@ async function modelPlugin(fastify, options) {
         req.bridge = new Bridge(client);
         req.agent = new Agent(client);
         req.agentLogs = new AgentLogs(client);
-        req.stakePosition = new StakePosition(client);
+        req.stakePosition = req.models.StakePosition;
     });
 }
 

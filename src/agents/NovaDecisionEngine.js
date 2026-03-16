@@ -75,7 +75,7 @@ Analyze which tokens have enough balance to stake after reserving the ${bufferPe
 - tokenAddress (the contract address)
 - amountToStake (human-readable amount as string, e.g., "10.5")
 - bufferLeft (amount kept liquid)
-- poolAddress (choose any pool from that validator)
+- poolAddress (must be a plain hex string starting with 0x, taken directly from the pools list above)
 - validatorName (validator name)
 
 Respond in JSON format:
