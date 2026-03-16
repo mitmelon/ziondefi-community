@@ -1,0 +1,633 @@
+<style>
+.cc-accordion-body{max-height:0;opacity:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1),opacity .3s ease}
+.cc-accordion-body.cc-accordion-open{opacity:1}
+.cc-accordion-chevron{transition:transform .3s ease}
+.cc-accordion-chevron.cc-accordion-chevron-open{transform:rotate(90deg)}
+.cc-field-error{border-color:#ef4444 !important;box-shadow:0 0 0 3px rgba(239,68,68,.12) !important}
+.cc-field-error-msg{color:#ef4444;font-size:11px;margin-top:4px;display:flex;align-items:center;gap:4px;animation:ccFadeIn .25s ease}
+@keyframes ccFadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+<div id="createCardModal"
+  class="fixed inset-0 z-50 bg-white flex flex-col transition-opacity duration-300"
+  role="dialog" aria-modal="true">
+  <header class="h-14 border-b border-slate-200 flex items-center justify-between shrink-0 bg-white relative px-4 md:px-6">
+    <div class="flex items-center gap-3">
+      <div class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-black text-white font-bold">
+        <img src="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/images/logo/logo-white.png"
+          alt="<%= typeof app_name !== 'undefined' ? app_name : '' %> logo" class="w-7 h-7" />
+      </div>
+      <span class="text-lg font-semibold text-slate-700"><%= t('card.create_title') %></span>
+    </div>
+    <button type="button" data-modal-close
+      class="text-sm text-slate-500 hover:text-red-500 transition-colors duration-200 flex items-center gap-1.5">
+      <i class="ph ph-x"></i> <%= t('card.close') %>
+    </button>
+  </header>
+  <div class="flex flex-1 overflow-hidden major-screen">
+    <aside class="hidden md:flex w-64 bg-white flex-col p-8 border-r border-slate-100/50">
+      <div class="mb-8">
+        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div id="ccProgressBar" class="h-full bg-slate-800 rounded-full transition-all duration-500 ease-out" style="width:17%"></div>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-2 tracking-wide"><span id="ccProgressLabel"><%= t('card.step_of', { step: '1', total: '6' }) %></span></p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Group 1 — Setup -->
+        <div>
+          <div class="flex items-start gap-3 relative activation-step">
+            <div class="w-4 h-4 rounded-full border-2 border-slate-800 bg-white shrink-0 relative z-10">
+              <div class="absolute inset-0.5 bg-slate-800 rounded-full"></div>
+            </div>
+            <div class="activation-step-line"></div>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900 leading-none mb-3"><%= t('card.group_setup') %></h3>
+              <ul class="space-y-3 pl-1">
+                <li data-step-item data-step="1" class="flex items-center gap-2 text-xs text-slate-800 font-medium cursor-pointer hover:text-slate-900 transition-colors">
+                  <i class="ph-bold ph-wallet"></i> <%= t('card.step_wallet') %>
+                </li>
+                <li data-step-item data-step="2" class="flex items-center gap-2 text-xs text-slate-400 font-medium cursor-pointer hover:text-slate-600 transition-colors">
+                  <i class="ph-bold ph-lock-key"></i> <%= t('card.step_pin') %>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 2 — Configure -->
+        <div>
+          <div class="flex items-start gap-3 relative activation-step">
+            <div class="w-4 h-4 rounded-full border-2 border-slate-200 bg-white shrink-0 relative z-10"></div>
+            <div class="activation-step-line"></div>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-400 leading-none mb-3"><%= t('card.group_configure') %></h3>
+              <ul class="space-y-3 pl-1">
+                <li data-step-item data-step="3" class="flex items-center gap-2 text-xs text-slate-400 font-medium cursor-pointer hover:text-slate-600 transition-colors">
+                  <i class="ph-bold ph-coins"></i> <%= t('card.step_currencies') %>
+                </li>
+                <li data-step-item data-step="4" class="flex items-center gap-2 text-xs text-slate-400 font-medium cursor-pointer hover:text-slate-600 transition-colors">
+                  <i class="ph-bold ph-storefront"></i> <%= t('card.step_payment') %>
+                </li>
+                <li data-step-item data-step="5" class="flex items-center gap-2 text-xs text-slate-400 font-medium cursor-pointer hover:text-slate-600 transition-colors">
+                  <i class="ph-bold ph-chart-bar"></i> <%= t('card.step_limits') %>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 3 — Deploy -->
+        <div>
+          <div class="flex items-start gap-3 relative activation-step">
+            <div class="w-4 h-4 rounded-full border-2 border-slate-200 bg-white shrink-0 relative z-10"></div>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-400 leading-none mb-3"><%= t('card.group_deploy') %></h3>
+              <ul class="space-y-3 pl-1">
+                <li data-step-item data-step="6" class="flex items-center gap-2 text-xs text-slate-400 font-medium cursor-pointer hover:text-slate-600 transition-colors">
+                  <i class="ph-bold ph-rocket-launch"></i> <%= t('card.step_review') %>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ---- MAIN FORM AREA ---- -->
+    <div class="flex-1 overflow-y-auto bg-white smooth-scroller">
+      <div class="max-w-xl mx-auto px-4 py-8 md:px-12">
+        <form id="createCardForm" class="space-y-6" autocomplete="off" novalidate>
+
+          <!-- ═══════════════ STEP 1 — SELECT WALLET ═══════════════ -->
+          <div id="step-1" class="cc-step fade-in space-y-5" data-step="1">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1"><%= t('card.wallet_title') %></h1>
+            <p class="text-slate-500 text-sm leading-relaxed">Select the wallet that will own this card. Only wallets connected to your account are shown.</p>
+            <input type="hidden" id="cc_owner" name="owner" />
+            <input type="hidden" name="wallet_choice" value="existing" />
+
+            <% const walletProviderIcons = { argentx: 'argentx.webp', argent: 'argentx.webp', argentmobile: 'argentx.webp', braavos: 'braavos.webp' }; %>
+
+            <% if (typeof wallets !== 'undefined' && wallets.length > 0) { %>
+              <div class="space-y-2" id="cc_wallet_list">
+                <% wallets.forEach(function(w, i) { %>
+                  <% const providerKey = (w.provider || '').toLowerCase().replace(/[^a-z]/g, ''); %>
+                  <% const iconFile = walletProviderIcons[providerKey] || null; %>
+                  <button type="button"
+                    class="cc-wallet-item w-full flex items-center gap-4 border-2 border-slate-200 rounded-xl px-4 py-3.5 bg-white hover:border-slate-400 hover:bg-slate-50 transition-all text-left <%= i === 0 ? 'border-slate-800 bg-slate-50' : '' %>"
+                    data-address="<%= w.address %>"
+                    data-provider="<%= w.provider %>">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
+                      <% if (iconFile) { %>
+                        <img src="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/images/wallets/<%= iconFile %>" class="w-8 h-8 object-contain" alt="<%= w.provider %>" />
+                      <% } else { %>
+                        <i class="ph-bold ph-wallet text-slate-500 text-xl"></i>
+                      <% } %>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-slate-800 capitalize"><%= w.provider || 'Connected Wallet' %></p>
+                      <p class="font-mono text-xs text-slate-400 truncate mt-0.5"><%= w.address %></p>
+                    </div>
+                    <div class="cc-wallet-check shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center <%= i === 0 ? 'border-slate-800 bg-slate-800' : 'border-slate-300' %>">
+                      <i class="ph-bold ph-check text-white text-[10px] <%= i === 0 ? '' : 'hidden' %>"></i>
+                    </div>
+                  </button>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div class="border border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center text-center gap-3">
+                <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
+                  <i class="ph-bold ph-wallet text-slate-400 text-2xl"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-slate-700">No wallets connected</p>
+                  <p class="text-xs text-slate-400 mt-1">Sign in with a Starknet wallet to connect one to your account.</p>
+                </div>
+              </div>
+            <% } %>
+            <div class="h-2"></div>
+          </div>
+
+          <!-- ═══════════════ STEP 2 — PIN ═══════════════ -->
+          <div id="step-2" class="cc-step fade-in hidden space-y-4" data-step="2">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1"><%= t('card.pin_title') %></h1>
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed"><%= t('card.pin_desc') %></p>
+
+            <div>
+              <label class="text-sm text-gray-500"><%= t('card.pin_choose_label') %></label>
+              <input id="cc_pin" name="pin" type="password" required inputmode="numeric" pattern="[0-9]*"
+                class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap"
+                placeholder="<%= t('card.pin_choose_placeholder') %>" />
+            </div>
+
+            <div>
+              <label class="text-sm text-gray-500"><%= t('card.pin_confirm_label') %></label>
+              <input id="cc_pin_confirm" name="pin_confirm" type="password" required inputmode="numeric" pattern="[0-9]*"
+                class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap"
+                placeholder="<%= t('card.pin_confirm_placeholder') %>" />
+              <p id="cc_pin_match_err" class="text-xs text-red-500 mt-1 hidden"><%= t('card.pin_mismatch') %></p>
+            </div>
+
+            <!-- Derived key output -->
+            <div class="mt-4 border-2 border-dashed border-slate-200 rounded-lg p-4">
+              <div class="flex items-start gap-3">
+                <i class="ph-bold ph-key text-slate-600 text-lg mt-0.5"></i>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-slate-700"><%= t('card.pin_public_key') %></p>
+                  <p class="text-xs text-slate-400 mt-1"><%= t('card.pin_derived_locally') %></p>
+                  <div id="cc_pin_pubkey_display" class="mt-2 font-mono text-xs text-slate-500 break-all bg-slate-50 rounded-md p-2 min-h-[32px]">
+                    —
+                  </div>
+                </div>
+              </div>
+              <button id="cc_gen_pin_btn" type="button"
+                class="hidden mt-3 w-full cta-gradient rounded-lg py-2 font-semibold text-sm flex items-center justify-center gap-2">
+                <i class="ph-bold ph-fingerprint"></i> Derive Key from PIN
+              </button>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+              <i class="ph-bold ph-warning text-amber-500 text-lg mt-0.5 shrink-0"></i>
+              <p class="text-xs text-amber-700 leading-relaxed"><%= t('card.pin_forget_warning') %></p>
+            </div>
+
+            <div class="h-4"></div>
+          </div>
+
+          <!-- ═══════════════ STEP 3 — CURRENCIES ═══════════════ -->
+          <div id="step-3" class="cc-step fade-in hidden space-y-4" data-step="3">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1"><%= t('card.currencies_title') %></h1>
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed"><%= t('card.currencies_desc') %></p>
+
+            <div>
+              <div class="grid grid-cols-2 gap-3">
+
+                <label class="cursor-pointer group">
+                  <input type="checkbox" name="currencies" value="ETH" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300 hover:shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">Ξ</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold text-slate-800">ETH</div>
+                      <div class="text-[11px] text-slate-400">Ethereum</div>
+                    </div>
+                    <div class="ml-auto w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all shrink-0 cc-tick">
+                      <i class="ph-bold ph-check text-white text-[10px] hidden"></i>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="cursor-pointer group">
+                  <input type="checkbox" name="currencies" value="STRK" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300 hover:shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-purple-600 font-bold text-lg">S</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold text-slate-800">STRK</div>
+                      <div class="text-[11px] text-slate-400">Starknet Token</div>
+                    </div>
+                    <div class="ml-auto w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all shrink-0 cc-tick">
+                      <i class="ph-bold ph-check text-white text-[10px] hidden"></i>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="cursor-pointer group">
+                  <input type="checkbox" name="currencies" value="USDC" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300 hover:shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-green-600 font-bold text-lg">$</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold text-slate-800">USDC</div>
+                      <div class="text-[11px] text-slate-400">USD Coin</div>
+                    </div>
+                    <div class="ml-auto w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all shrink-0 cc-tick">
+                      <i class="ph-bold ph-check text-white text-[10px] hidden"></i>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="cursor-pointer group">
+                  <input type="checkbox" name="currencies" value="USDT" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300 hover:shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-emerald-600 font-bold text-lg">₮</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold text-slate-800">USDT</div>
+                      <div class="text-[11px] text-slate-400">Tether USD</div>
+                    </div>
+                    <div class="ml-auto w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all shrink-0 cc-tick">
+                      <i class="ph-bold ph-check text-white text-[10px] hidden"></i>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="cursor-pointer group">
+                  <input type="checkbox" name="currencies" value="DAI" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300 hover:shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-yellow-600 font-bold text-lg">D</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold text-slate-800">DAI</div>
+                      <div class="text-[11px] text-slate-400">Dai Stablecoin</div>
+                    </div>
+                    <div class="ml-auto w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all shrink-0 cc-tick">
+                      <i class="ph-bold ph-check text-white text-[10px] hidden"></i>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="cursor-pointer group">
+                  <input type="checkbox" name="currencies" value="WBTC" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300 hover:shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-orange-500 font-bold text-lg">₿</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold text-slate-800">WBTC</div>
+                      <div class="text-[11px] text-slate-400">Wrapped Bitcoin</div>
+                    </div>
+                    <div class="ml-auto w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all shrink-0 cc-tick">
+                      <i class="ph-bold ph-check text-white text-[10px] hidden"></i>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="cursor-pointer group">
+                  <input type="checkbox" name="currencies" value="LORDS" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300 hover:shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-blue-600 font-bold text-lg">L</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold text-slate-800">LORDS</div>
+                      <div class="text-[11px] text-slate-400">Realms Token</div>
+                    </div>
+                    <div class="ml-auto w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all shrink-0 cc-tick">
+                      <i class="ph-bold ph-check text-white text-[10px] hidden"></i>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="cursor-pointer group">
+                  <input type="checkbox" name="currencies" value="WSTETH" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300 hover:shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-teal-600 font-bold text-lg">wΞ</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold text-slate-800">wstETH</div>
+                      <div class="text-[11px] text-slate-400">Wrapped staked ETH</div>
+                    </div>
+                    <div class="ml-auto w-5 h-5 rounded-full border-2 border-slate-200 flex items-center justify-center transition-all shrink-0 cc-tick">
+                      <i class="ph-bold ph-check text-white text-[10px] hidden"></i>
+                    </div>
+                  </div>
+                </label>
+
+              </div>
+            </div>
+
+            <div class="h-4"></div>
+          </div>
+
+          <!-- ═══════════════ STEP 4 — PAYMENT ═══════════════ -->
+          <div id="step-4" class="cc-step fade-in hidden space-y-4" data-step="4">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1"><%= t('card.payment_title') %></h1>
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed"><%= t('card.payment_desc') %></p>
+
+            <!-- Payment Mode — matches PaymentMode enum in contract -->
+            <div>
+              <label class="text-sm text-gray-500 mb-2 block"><%= t('card.payment_mode_label') %></label>
+              <p class="text-xs text-slate-400 mb-3"><%= t('card.payment_mode_hint') %></p>
+              <div class="grid grid-cols-2 gap-3">
+                <label class="cursor-pointer">
+                  <input type="radio" name="payment_mode" value="MerchantTokenOnly" class="sr-only peer" checked />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 text-center transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300">
+                    <i class="ph-bold ph-storefront text-slate-700 text-xl"></i>
+                    <div class="text-sm font-semibold text-slate-800 mt-1"><%= t('card.payment_merchant_token') %></div>
+                    <div class="text-[11px] text-slate-400"><%= t('card.payment_merchant_token_desc') %></div>
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="payment_mode" value="AnyAcceptedToken" class="sr-only peer" />
+                  <div class="p-3 rounded-xl border-2 border-slate-200 text-center transition-all duration-200 peer-checked:border-slate-800 peer-checked:bg-slate-50 peer-checked:shadow-md hover:border-slate-300">
+                    <i class="ph-bold ph-swap text-slate-500 text-xl"></i>
+                    <div class="text-sm font-semibold text-slate-800 mt-1"><%= t('card.payment_any_token') %></div>
+                    <div class="text-[11px] text-slate-400"><%= t('card.payment_any_token_desc') %></div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="h-4"></div>
+          </div>
+
+          <!-- ═══════════════ STEP 5 — SPENDING LIMITS ═══════════════ -->
+          <div id="step-5" class="cc-step fade-in hidden space-y-4" data-step="5">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1"><%= t('card.limits_title') %></h1>
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed"><%= t('card.limits_desc') %></p>
+
+            <!-- Limits -->
+            <div>
+              <p class="text-sm font-semibold text-slate-700 mb-3"><%= t('card.limits_configure') %></p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="text-sm text-gray-500"><%= t('card.limits_max_tx') %></label>
+                  <input id="cc_max_tx" name="max_transaction_amount" type="text" inputmode="decimal"
+                    class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap money-input"
+                    placeholder="<%= t('card.limits_max_tx_placeholder') %>" />
+                </div>
+                <div>
+                  <label class="text-sm text-gray-500"><%= t('card.limits_daily_spend') %></label>
+                  <input id="cc_daily_spend" name="daily_spend_limit" type="text" inputmode="decimal"
+                    class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap money-input"
+                    placeholder="<%= t('card.limits_daily_spend_placeholder') %>" />
+                </div>
+                <div>
+                  <label class="text-sm text-gray-500"><%= t('card.limits_daily_tx') %></label>
+                  <input id="cc_daily_tx_limit" name="daily_transaction_limit" type="number" min="1" max="1000"
+                    class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap"
+                    placeholder="<%= t('card.limits_daily_tx_placeholder') %>" />
+                </div>
+                <div>
+                  <label class="text-sm text-gray-500"><%= t('card.limits_slippage') %></label>
+                  <input id="cc_slippage" name="slippage_tolerance_bps" type="number" min="0" max="500" step="1"
+                    class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap"
+                    placeholder="<%= t('card.limits_slippage_placeholder') %>" />
+                  <p class="text-xs text-slate-400 mt-1"><%= t('card.limits_slippage_hint') %></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Security Delays -->
+            <div>
+              <p class="text-sm font-semibold text-slate-700 mb-1"><%= t('card.delays_title') %></p>
+              <p class="text-xs text-slate-400 mb-3"><%= t('card.delays_desc') %></p>
+              <div class="grid grid-cols-1 gap-3">
+                <div>
+                  <label class="text-sm text-gray-500"><%= t('card.delays_transfer') %></label>
+                  <select id="cc_transfer_delay" name="transfer_delay"
+                    class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap bg-white">
+                    <option value="0"><%= t('card.delays_instant') %></option>
+                    <option value="3600"><%= t('card.delays_1h') %></option>
+                    <option value="21600"><%= t('card.delays_6h') %></option>
+                    <option value="43200"><%= t('card.delays_12h') %></option>
+                    <option value="86400" selected><%= t('card.delays_24h') %></option>
+                    <option value="172800"><%= t('card.delays_48h') %></option>
+                    <option value="604800"><%= t('card.delays_7d') %></option>
+                  </select>
+                  <p class="text-xs text-slate-400 mt-1"><%= t('card.delays_transfer_hint') %></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="h-4"></div>
+          </div>
+
+          <!-- ═══════════════ STEP 6 — REVIEW & CONFIRM ═══════════════ -->
+          <div id="step-6" class="cc-step fade-in hidden space-y-5" data-step="6">
+            <div class="text-center">
+              <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg shadow-slate-300 mb-3">
+                <i class="ph-bold ph-rocket-launch text-white text-2xl"></i>
+              </div>
+              <h1 class="text-2xl font-bold text-slate-900"><%= t('card.review_title') %></h1>
+              <p class="text-slate-500 text-sm mt-1 leading-relaxed"><%- t('card.review_desc') %></p>
+            </div>
+
+            <!-- ── Card 1: Identity ── -->
+            <div class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/50 shadow-sm overflow-hidden">
+              <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-slate-200 flex items-center justify-center shrink-0">
+                  <i class="ph-bold ph-wallet text-slate-700 text-sm"></i>
+                </div>
+                <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider"><%= t('card.review_identity') %></span>
+              </div>
+              <div class="p-4 space-y-3">
+                <div>
+                  <p class="text-[11px] text-slate-400 uppercase tracking-wider mb-1"><%= t('card.review_wallet_address') %></p>
+                  <p id="cc_sum_owner" class="font-mono text-sm text-slate-800 bg-slate-100/70 rounded-lg px-3 py-2 break-all leading-relaxed">—</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <p class="text-[11px] text-slate-400 uppercase tracking-wider mb-1"><%= t('card.review_wallet_type') %></p>
+                    <div id="cc_sum_wallet_type" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5">
+                      <i class="ph-bold ph-shield-checkered text-sm"></i> —
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[11px] text-slate-400 uppercase tracking-wider mb-1"><%= t('card.review_pin_key') %></p>
+                    <p id="cc_sum_pin" class="font-mono text-xs text-slate-600 bg-slate-100/70 rounded-lg px-3 py-2 break-all">—</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Card 2: Currencies ── -->
+            <div class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/50 shadow-sm overflow-hidden">
+              <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                  <i class="ph-bold ph-coins text-amber-600 text-sm"></i>
+                </div>
+                <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider"><%= t('card.review_currencies') %></span>
+              </div>
+              <div class="p-4">
+                <div id="cc_sum_currencies" class="flex flex-wrap gap-2">
+                  <span class="text-xs text-slate-400">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Card 3: Payment Mode ── -->
+            <div class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/50 shadow-sm overflow-hidden">
+              <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  <i class="ph-bold ph-arrows-left-right text-emerald-600 text-sm"></i>
+                </div>
+                <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider"><%= t('card.review_payment_mode') %></span>
+              </div>
+              <div class="p-4">
+                <div class="bg-slate-50/80 rounded-xl p-3 text-center">
+                  <div class="flex items-center justify-center gap-1.5">
+                    <i id="cc_sum_mode_icon" class="ph-bold ph-storefront text-slate-600"></i>
+                    <span id="cc_sum_mode" class="text-sm font-semibold text-slate-800">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Card 4: Limits ── -->
+            <div class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/50 shadow-sm overflow-hidden">
+              <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center shrink-0">
+                  <i class="ph-bold ph-chart-bar text-rose-600 text-sm"></i>
+                </div>
+                <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider"><%= t('card.review_limits') %></span>
+              </div>
+              <div class="p-4 grid grid-cols-3 gap-2">
+                <div class="bg-slate-50/80 rounded-xl p-3 text-center">
+                  <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1"><%= t('card.review_max_tx') %></p>
+                  <p id="cc_sum_max_tx" class="text-base font-bold text-slate-800">—</p>
+                </div>
+                <div class="bg-slate-50/80 rounded-xl p-3 text-center">
+                  <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1"><%= t('card.review_daily_spend') %></p>
+                  <p id="cc_sum_daily_spend" class="text-base font-bold text-slate-800">—</p>
+                </div>
+                <div class="bg-slate-50/80 rounded-xl p-3 text-center">
+                  <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1"><%= t('card.review_slippage') %></p>
+                  <p id="cc_sum_slippage" class="text-base font-bold text-slate-800">—</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Card 5: Security Delays ── -->
+            <div class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/50 shadow-sm overflow-hidden">
+              <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
+                  <i class="ph-bold ph-timer text-violet-600 text-sm"></i>
+                </div>
+                <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider"><%= t('card.review_delays') %></span>
+              </div>
+              <div class="p-4 grid gap-3">
+                <div class="bg-slate-50/80 rounded-xl p-3 text-center">
+                  <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5"><%= t('card.review_transfer_delay') %></p>
+                  <div class="flex items-center justify-center gap-1.5">
+                    <i class="ph-bold ph-shield-check text-violet-500"></i>
+                    <span id="cc_sum_transfer_delay" class="text-sm font-semibold text-slate-800">24h</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Security badge ── -->
+            <div class="rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/60 p-4 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0 shadow-md shadow-emerald-200">
+                <i class="ph-bold ph-shield-check text-white text-lg"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-emerald-800"><%= t('card.review_secure_title') %></p>
+                <p class="text-[11px] text-emerald-600/80 mt-0.5 leading-relaxed"><%= t('card.review_secure_desc') %></p>
+              </div>
+              <i class="ph-bold ph-lock-simple text-emerald-300 text-xl shrink-0"></i>
+            </div>
+
+            <div class="h-2"></div>
+          </div>
+
+          <!-- ═══════════ NAVIGATION BUTTONS ═══════════ -->
+          <div class="mt-4 flex items-center gap-3">
+            <button id="cc_btn_prev" type="button"
+              class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm hover:shadow-sm transition-all"
+              style="visibility:hidden;">
+              <i class="ph-bold ph-arrow-left"></i> <%= t('card.btn_back') %>
+            </button>
+            <div class="flex-1"></div>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" required>
+            <button id="cc_btn_next" type="button"
+              class="w-full cta-gradient rounded-lg py-2 font-semibold text-sm flex items-center justify-center gap-2 cc_btn_next">
+              <span class="stepper-label"><%= t('card.btn_next') %></span>
+              <i class="ph-bold ph-arrow-right text-white"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+window.__CARD_LANG = {
+  step_of: '<%= t("card.step_of", { step: "{step}", total: "{total}" }) %>',
+  wallet_type_new: '<%= t("card.wallet_type_new") %>',
+  wallet_type_existing: '<%= t("card.wallet_type_existing") %>',
+  none_selected: '<%= t("card.none_selected") %>',
+  payment_merchant_token: '<%= t("card.payment_merchant_token") %>',
+  payment_any_token: '<%= t("card.payment_any_token") %>',
+  wallet_created: '<%= t("card.wallet_created") %>',
+  wallet_wiped_title: '<%= t("card.wallet_wiped_title") %>',
+  wallet_wiped_desc: '<%= t("card.wallet_wiped_desc") %>',
+  err_wallet_required: '<%= t("card.err_wallet_required") %>',
+  err_generate_first: '<%= t("card.err_generate_first") %>',
+  err_enter_pin: '<%= t("card.err_enter_pin") %>',
+  err_pin_mismatch: '<%= t("card.err_pin_mismatch") %>',
+  err_key_derivation_failed: '<%= t("card.err_key_derivation_failed") %>',
+  err_set_wallet_first: '<%= t("card.err_set_wallet_first") %>',
+  err_select_currency: '<%= t("card.err_select_currency") %>',
+  err_wallet_gen_failed: '<%= t("card.err_wallet_gen_failed") %>',
+  err_crypto_not_loaded: '<%= t("card.err_crypto_not_loaded") %>',
+  delays_instant: '<%= t("card.delays_instant") %>',
+  delays_5m: '<%= t("card.delays_5m") %>',
+  delays_15m: '<%= t("card.delays_15m") %>',
+  delays_30m: '<%= t("card.delays_30m") %>',
+  delays_1h: '<%= t("card.delays_1h") %>',
+  delays_2h: '<%= t("card.delays_2h") %>',
+  delays_6h: '<%= t("card.delays_6h") %>',
+  delays_12h: '<%= t("card.delays_12h") %>',
+  delays_24h: '<%= t("card.delays_24h") %>',
+  delays_48h: '<%= t("card.delays_48h") %>',
+  delays_7d: '<%= t("card.delays_7d") %>',
+  card_saved: '<%= t("card.card_saved") %>',
+  card_queued: '<%= t("card.card_queued") %>',
+  card_create_failed: '<%= t("card.card_create_failed") %>',
+  btn_create: '<%= t("card.btn_create") %>',
+  btn_next: '<%= t("card.btn_next") %>',
+  download_file_header: '<%= t("card.download_file_header", { app_name: typeof app_name !== "undefined" ? app_name : "ZionDefi" }) %>',
+  download_file_warning: '<%= t("card.download_file_warning") %>',
+  copied: '<%= t("card.copied") %>',
+  card_deployed: '<%= t("card.card_deployed") %>',
+  card_undeployed_desc: '<%= t("card.card_undeployed_desc") %>',
+  card_deployed_desc: '<%= t("card.card_deployed_desc") %>',
+  card_deploy_failed_desc: '<%= t("card.card_deploy_failed_desc") %>',
+  card_deployed_failed: '<%= t("card.card_deploy_failed") %>'
+
+  
+};
+
+(function(){
+  var root = '<%= typeof root !== "undefined" ? root : "" %>';
+
+  function loadScript(src, cb) {
+    if (document.querySelector('script[src="' + src + '"]')) { if (cb) cb(); return; }
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = cb || function () {};
+    s.onerror = cb || function () {};
+    document.head.appendChild(s);
+  }
+  loadScript(root + 'public/home/ui/js/cards.js', function () {
+    if (typeof window.initCreateCardModal === 'function') window.initCreateCardModal();
+    loadScript(root + 'public/home/plugin/starknet.bundle.min.js', function () {
+      loadScript(root + 'public/home/plugin/zion-crypto.js');
+    });
+  });
+})();
+</script>

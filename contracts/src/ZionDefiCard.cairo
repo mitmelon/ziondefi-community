@@ -998,6 +998,7 @@ mod ZionDefiCard {
                 out.append(TokenBalance { 
                     token, 
                     balance: real_bal,
+                    contract_balance: self.token_balances.entry(token).read(),
                     last_updated: self.last_balance_sync.entry(token).read() 
                 });
                 

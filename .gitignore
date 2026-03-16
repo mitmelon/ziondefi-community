@@ -1,7 +1,5 @@
 # Directories
 node_modules/
-public/
-src/
 secrets/
 storage/
 template/
@@ -17,14 +15,13 @@ site.webmanifes
 .DS_Store
 zion.code-workspace
 package-lock.json
-game.html
-index.html
 example.js
 deploy.js
 CONTRACT.md
 list-models.js
-README.md
 server.js
+list-models.js
+upgrade-card.js
 
 
 

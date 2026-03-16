@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* ── Tell Tailwind v4 where to scan for class names ── */
+@source "../../src/views/**/*.ejs";
+@source "../../template/**/*.html";
+@source "../home/ui/js/**/*.js";
+
+/* ── Import v3 config for theme extensions (colors, fonts, etc.) ── */
+@config "../../tailwind.config.js";

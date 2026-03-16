@@ -1,0 +1,324 @@
+<%- include('../partials/home/header') %>
+
+<% var _card = (typeof card !== 'undefined' && card) ? card : null; %>
+<% var _isFailed = _card && (_card.status === 'failed' || _card.status === 'pending_deployment'); %>
+<% var _isPending = _card && (_card.status === 'pending_deployment' || _card.status === 'deploying'); %>
+
+
+    <div id="view-dashboard" class="home-page flex-1 w-full min-h-screen bg-slate-50/60 manageCardModal" data-card-id="<%= _card ? _card.card_id : '' %>">
+
+        <%# ── Alert Banner (failed / pending) ─────────────────────────── %>
+        <% if (_isFailed) { %>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-5">
+            <div class="flex items-center gap-3 border rounded-xl px-5 py-3 animate__animated animate__slideInDown
+                <%= _card.status === 'failed' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-800' %>"
+                id="failed-card-banner">
+                <i class="ph-bold flex-shrink-0 text-lg
+                    <%= _card.status === 'failed' ? 'ph-warning-diamond text-red-500' : 'ph-clock text-amber-500' %>"></i>
+                <div class="flex-1 min-w-0">
+                    <span class="font-semibold text-sm">
+                        <%= _card.status === 'failed' ? 'Card deployment failed.' : 'Card deployment is pending.' %>
+                    </span>
+                    <% if (_card.status === 'failed' && _card.deploy_error) { %>
+                    <span class="text-xs ml-1 text-red-500 truncate hidden sm:inline">
+                        <%= _card.deploy_error.length > 90 ? _card.deploy_error.slice(0,90)+'…' : _card.deploy_error %>
+                    </span>
+                    <% } %>
+                </div>
+                <button id="redeploy-banner-btn"
+                    class="create-card-btn flex-shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-all duration-200 active:scale-95
+                        <%= _card.status === 'failed' ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-500 hover:bg-amber-600' %>"
+                    data-action="redeploy" data-card-id="<%= _card.card_id %>">
+                    <i class="ph-bold ph-arrow-clockwise"></i> Redeploy
+                </button>
+                <button class="dismiss-banner-btn flex-shrink-0 ml-1 p-1 rounded-lg hover:bg-black/10 transition"
+                    data-target="failed-card-banner" title="Dismiss">
+                    <i class="ph-bold ph-x text-sm"></i>
+                </button>
+            </div>
+        </div>
+        <% } %>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-7">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+                <%# ══════════════════ LEFT COLUMN ══════════════════ %>
+                <div class="flex flex-col gap-5">
+
+                    <%# ── Card Widget ─────────────────────────────── %>
+                    <% if (_card && _card.status === 'failed') { %>
+                    <%# FAILED %>
+                    <div class="relative w-full aspect-[1.72/1] bg-gradient-to-br from-rose-950 via-red-800 to-red-700 rounded-3xl p-6 text-white shadow-2xl overflow-hidden group">
+                        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,.07),transparent_60%)]"></div>
+                        <div class="absolute -right-10 -top-10 w-44 h-44 rounded-full bg-white/5 blur-2xl"></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="text-lg font-black italic tracking-widest">ZionDefi</span>
+                            <i class="ph-bold ph-warning-diamond text-2xl text-red-200/80"></i>
+                        </div>
+                        <div class="relative z-10 mt-4">
+                            <p class="text-[9px] text-red-200 uppercase tracking-[.2em] mb-1">Deployment Failed</p>
+                            <% if (_card.deploy_error) { %>
+                            <p class="text-xs text-red-100/90 leading-relaxed line-clamp-2"><%= _card.deploy_error.length > 100 ? _card.deploy_error.slice(0,100)+'…' : _card.deploy_error %></p>
+                            <% } else { %>
+                            <p class="text-xs text-red-100/90">An error occurred during contract deployment.</p>
+                            <% } %>
+                        </div>
+                        <div class="absolute bottom-5 left-6 right-6 z-10 flex justify-between items-end">
+                            <div>
+                                <p class="text-[9px] text-red-200 uppercase tracking-[.2em] mb-1">Attempts</p>
+                                <p class="font-semibold text-sm"><%= _card.deploy_attempts || 0 %> / 5</p>
+                            </div>
+                            <button id="redeploy-card-btn"
+                                class="create-card-btn inline-flex items-center gap-2 bg-white/95 text-red-700 font-semibold text-xs px-4 py-2 rounded-xl hover:bg-white hover:scale-105 transition-all duration-200 shadow-lg active:scale-95"
+                                data-action="redeploy" data-card-id="<%= _card.card_id %>">
+                                <i class="ph-bold ph-arrow-clockwise"></i> Redeploy
+                            </button>
+                        </div>
+                    </div>
+
+                    <% } else if (_isPending) { %>
+                    <%# PENDING / DEPLOYING %>
+                    <div class="relative w-full aspect-[1.72/1] bg-gradient-to-br from-amber-700 via-amber-600 to-yellow-500 rounded-3xl p-6 text-white shadow-2xl overflow-hidden">
+                        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,.1),transparent_60%)]"></div>
+                        <div class="absolute -right-10 -top-10 w-44 h-44 rounded-full bg-white/5 blur-2xl"></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="text-lg font-black italic tracking-widest">ZionDefi</span>
+                            <i class="ph-bold ph-cpu text-2xl text-yellow-100/80 animate-pulse"></i>
+                        </div>
+                        <div class="relative z-10 mt-7">
+                            <p class="text-[9px] text-yellow-100 uppercase tracking-[.2em] mb-1">Contract Address</p>
+                            <p class="text-xs text-yellow-100/80 flex items-center gap-1.5">
+                                <span class="inline-block w-1.5 h-1.5 bg-yellow-200 rounded-full animate-pulse"></span>
+                                Deploying to Starknet<span class="animate-pulse">…</span>
+                            </p>
+                        </div>
+                        <div class="absolute bottom-5 left-6 right-6 z-10 flex justify-between items-end">
+                            <div>
+                                <p class="text-[9px] text-yellow-100 uppercase tracking-[.2em] mb-1">Cardholder</p>
+                                <p class="font-semibold tracking-wide uppercase text-sm"><%= user.name || user.username %></p>
+                            </div>
+                            <button id="redeploy-card-btn"
+                                class="create-card-btn inline-flex items-center gap-2 bg-white/95 text-amber-700 font-semibold text-xs px-4 py-2 rounded-xl hover:bg-white hover:scale-105 transition-all duration-200 shadow-lg active:scale-95"
+                                data-action="redeploy" data-card-id="<%= _card.card_id %>">
+                                <i class="ph-bold ph-arrow-clockwise"></i> Redeploy
+                            </button>
+                        </div>
+                    </div>
+
+                    <% } else if (_card && _card.status === 'active') { %>
+                    <%# ACTIVE %>
+                    <div class="relative w-full aspect-[1.72/1] bg-gradient-to-br from-zinc-950 via-neutral-900 to-black rounded-3xl p-6 text-white shadow-2xl overflow-hidden group hover:scale-[1.015] transition-transform duration-300">
+                        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,.04),transparent_60%)]"></div>
+                        <div class="absolute -right-10 -top-10 w-44 h-44 rounded-full bg-white/5 blur-2xl"></div>
+                        <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="text-lg font-black italic tracking-widest">ZionDefi</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                                <span class="text-[10px] text-slate-400 font-medium"><%= user.is_live ? 'Mainnet' : 'Sepolia' %></span>
+                            </div>
+                        </div>
+                        <div class="relative z-10 mt-7">
+                            <p class="text-[9px] text-slate-400 uppercase tracking-[.2em] mb-1.5">Smart Contract</p>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-sm text-slate-200" id="contract-address-display">
+                                    <%= _card.address ? (_card.address.slice(0,10)+'…'+_card.address.slice(-6)) : '—' %>
+                                </span>
+                                <button id="copy-card-address-btn"
+                                    data-address="<%= _card.address %>"
+                                    class="text-slate-500 hover:text-white transition-colors duration-150 p-1 rounded hover:bg-white/10 active:scale-90"
+                                    title="Copy address">
+                                    <i class="ph-bold ph-copy text-base" id="copy-card-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-5 left-6 right-6 z-10 flex justify-between items-end">
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase tracking-[.2em] mb-1">Cardholder</p>
+                                <p class="font-semibold tracking-wide uppercase text-sm"><%= user.name || user.username %></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] text-slate-400 uppercase tracking-[.2em] mb-1">Balance</p>
+                                <p class="font-bold text-sm" id="card-balance-widget">
+                                    <span class="text-slate-500 text-xs animate-pulse">Loading…</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <% } else { %>
+                    <%# FALLBACK %>
+                    <div class="relative w-full aspect-[1.72/1] bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl overflow-hidden">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="text-lg font-black italic tracking-widest">ZionDefi</span>
+                            <i class="ph-bold ph-cpu text-2xl text-slate-500"></i>
+                        </div>
+                        <div class="relative z-10 mt-8 text-center">
+                            <p class="text-xs text-slate-400">No card yet — create one to get started.</p>
+                        </div>
+                    </div>
+                    <% } %>
+
+                    <%# ── Quick Actions ────────────────────────────── %>
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[.15em] mb-4">Quick Actions</p>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <button class="deposit-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/60 transition-all duration-200 group active:scale-95">
+                                <div class="w-9 h-9 rounded-full bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center transition-colors duration-200">
+                                    <i class="ph-bold ph-arrow-down text-slate-600 group-hover:text-indigo-600 text-base transition-colors duration-200"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-600 group-hover:text-indigo-700 transition-colors duration-200">Deposit</span>
+                            </button>
+                            <button class="enable-zara-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-violet-100 bg-violet-50/50 hover:bg-violet-100 hover:border-violet-300 transition-all duration-200 group active:scale-95">
+                                <div class="w-9 h-9 rounded-full bg-violet-100 group-hover:bg-violet-200 flex items-center justify-center transition-colors duration-200">
+                                    <i class="ph-bold ph-robot text-violet-600 text-base"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-violet-700">Enable Zara</span>
+                            </button>
+                            <button class="quick-action-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/60 transition-all duration-200 group active:scale-95">
+                                <div class="w-9 h-9 rounded-full bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center transition-colors duration-200">
+                                    <i class="ph-bold ph-arrow-up text-slate-600 group-hover:text-emerald-600 text-base transition-colors duration-200"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-600 group-hover:text-emerald-700 transition-colors duration-200">Withdraw</span>
+                            </button>
+                            <button class="quick-action-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-slate-100 bg-slate-900 hover:bg-slate-800 transition-all duration-200 group active:scale-95">
+                                <div class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                                    <i class="ph-bold ph-identification-card text-white text-base"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-white">Request Card</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div><%# end left col %>
+
+                <%# ══════════════════ RIGHT COLUMN ══════════════════ %>
+                <div class="xl:col-span-2 flex flex-col gap-5">
+
+                    <%# ── Stats Strip ──────────────────────────────── %>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-start gap-4 hover:shadow-md transition-shadow duration-300">
+                            <div class="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+                                <i class="ph-bold ph-currency-circle-dollar text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[.12em] mb-1">Total Staked</p>
+                                <p class="text-2xl font-black text-slate-900 leading-none" id="stat-total-staked">
+                                    <span class="text-slate-300 text-base animate-pulse">—</span>
+                                </p>
+                                <p class="text-[10px] text-slate-400 mt-1" id="stat-staked-sub">All positions</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-start gap-4 hover:shadow-md transition-shadow duration-300">
+                            <div class="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                                <i class="ph-bold ph-trend-up text-emerald-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[.12em] mb-1">Total Yield</p>
+                                <p class="text-2xl font-black text-emerald-600 leading-none" id="stat-total-yield">
+                                    <span class="text-slate-300 text-base animate-pulse">—</span>
+                                </p>
+                                <p class="text-[10px] text-slate-400 mt-1" id="stat-yield-sub">Earned to date</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-start gap-4 hover:shadow-md transition-shadow duration-300">
+                            <div class="w-11 h-11 rounded-xl bg-violet-50 flex items-center justify-center shrink-0">
+                                <i class="ph-bold ph-robot text-violet-600 text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[.12em] mb-1">Zara AI</p>
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500" id="zara-status-badge">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
+                                        Inactive
+                                    </span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-1.5">Financial agent</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <%# ── Assets Staked ─────────────────────────────── %>
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[.15em]">Assets Staked</p>
+                            <span class="text-[10px] text-slate-400" id="assets-total-label">—</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="assets-staked-strip">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-400 text-xs animate-pulse">Loading…</span>
+                        </div>
+                    </div>
+
+                    <%# ── Transactions + Zara Logs ──────────────────── %>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+                        <%# Transactions (3/5) %>
+                        <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="ph-bold ph-list text-slate-400"></i>
+                                    <h3 class="font-bold text-slate-800 text-sm">Transactions</h3>
+                                </div>
+                                <span class="text-[10px] text-slate-400 font-medium" id="txn-total-label"></span>
+                            </div>
+                            <div class="overflow-x-auto flex-1">
+                                <table class="w-full text-left border-collapse text-sm">
+                                    <thead>
+                                        <tr class="bg-slate-50/80 text-[10px] text-slate-400 uppercase tracking-wider">
+                                            <th class="py-3 px-5 font-semibold">Ref</th>
+                                            <th class="py-3 px-4 font-semibold">Type</th>
+                                            <th class="hidden md:table-cell py-3 px-4 font-semibold">Date</th>
+                                            <th class="py-3 px-4 font-semibold">Status</th>
+                                            <th class="py-3 px-5 font-semibold text-right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-50" id="txn-table-body">
+                                        <tr>
+                                            <td colspan="5" class="py-12 text-center text-slate-400 text-xs">
+                                                <i class="ph-bold ph-spinner-gap animate-spin text-lg block mx-auto mb-2"></i>
+                                                Loading transactions…
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <%# Pagination will be injected by paginationController %>
+                            <div id="txn-pagination" class="px-5 py-3 border-t border-slate-100 flex items-center justify-between min-h-[48px]"></div>
+                        </div>
+
+                        <%# Zara Activity Log (2/5) %>
+                        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="ph-bold ph-robot text-violet-500"></i>
+                                    <h3 class="font-bold text-slate-800 text-sm">Zara Activity</h3>
+                                </div>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 text-[10px] font-semibold" id="zara-log-count-badge">
+                                    <span class="w-1 h-1 bg-violet-500 rounded-full animate-pulse inline-block"></span>
+                                    Live
+                                </span>
+                            </div>
+                            <div class="flex-1 overflow-y-auto divide-y divide-slate-50/80 zara-scrollbar" id="zara-log-feed" style="max-height:460px;">
+                                <div class="flex flex-col items-center justify-center gap-3 py-14 text-slate-300" id="zara-log-empty">
+                                    <i class="ph-bold ph-robot text-4xl"></i>
+                                    <p class="text-xs">No activity yet</p>
+                                </div>
+                                <div id="zara-log-sentinel" class="h-1 shrink-0"></div>
+                            </div>
+                            <div id="zara-log-loader" class="hidden px-5 py-3 text-center text-xs text-slate-400 border-t border-slate-50">
+                                <i class="ph-bold ph-spinner-gap animate-spin mr-1"></i> Loading more…
+                            </div>
+                        </div>
+
+                    </div><%# end transactions+zara grid %>
+
+                </div><%# end right col %>
+            </div><%# end main grid %>
+        </div><%# end container %>
+    </div><%# end view-dashboard %>
+
+<%- include('../partials/home/footer') %>

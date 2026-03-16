@@ -1,0 +1,284 @@
+﻿<style>
+  .mc-tab-enter {
+    transform: translateY(6px);
+    opacity: 0;
+    transition: all .24s ease;
+  }
+  .mc-tab-enter.mc-tab-enter-active {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .mc-scrollbar::-webkit-scrollbar { width: 6px; }
+  .mc-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .mc-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  .mc-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  .mc-hide-scrollbar::-webkit-scrollbar { display: none; }
+  .mc-hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+<div id="cardDepositModal" class="fixed inset-0 z-50 bg-slate-50 flex flex-col transition-opacity duration-300"
+  role="dialog" aria-modal="true" data-card-id="<%= cardData.card_id %>">
+
+  <!-- Header -->
+  <header class="h-14 flex items-center justify-between shrink-0 bg-white border-b border-slate-200 px-4 md:px-6 z-10 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+        <i class="ph-bold ph-download-simple text-base"></i>
+      </div>
+      <div class="min-w-0">
+        <div class="text-sm font-bold text-slate-800 leading-tight">
+          <%= t('card.deposit_funds') %>
+        </div>
+        <div class="text-[11px] text-slate-500 font-medium">
+          <% const _addr = (cardData && cardData.address) ? String(cardData.address) : ''; %>
+          <% const _addr_mask = _addr ? ('...' + _addr.slice(-8)) : '-'; %>
+          <%= _addr_mask %>
+        </div>
+      </div>
+    </div>
+    <button type="button" data-modal-close
+      class="h-8 px-3 rounded-lg text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all flex items-center gap-1.5">
+      <i class="ph-bold ph-x text-sm"></i>
+      <%= t('close') %>
+    </button>
+  </header>
+
+  <!-- Body -->
+  <div class="flex-1 overflow-y-auto mc-scrollbar">
+    <div class="max-w-lg mx-auto p-4 md:p-6 mc-tab-enter" id="mc_deposit_body">
+
+      <!-- Method tabs -->
+      <div class="bg-slate-100 p-1 rounded-lg flex gap-1 mb-5">
+        <button data-deposit-tab="direct"
+          class="deposit-tab flex-1 text-xs py-1.5 rounded font-semibold text-slate-500 hover:text-slate-700 transition-all">
+          <%= t('card.direct') %>
+        </button>
+        <button data-deposit-tab="bridge"
+          class="deposit-tab flex-1 text-xs py-1.5 rounded font-semibold text-slate-500 hover:text-slate-700 transition-all">
+          <%= t('card.bridge') %>
+        </button>
+        <button data-deposit-tab="p2p"
+          class="deposit-tab flex-1 text-xs py-1.5 rounded font-semibold text-slate-500 hover:text-slate-700 transition-all">
+          <%= t('card.p2p') %>
+        </button>
+      </div>
+
+      <!-- DIRECT -->
+      <div data-deposit-panel="direct" class="deposit-panel space-y-4">
+        <p class="text-xs text-slate-500 leading-relaxed">
+          <%= t('card.direct_deposit_desc') %>
+        </p>
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col items-center justify-center space-y-4">
+          <div class="w-28 h-28 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center justify-center">
+            <img src="<%= qrDataUrl %>" alt="<%= t('card.deposit_address') %>" class="w-20 h-20 object-contain">
+          </div>
+          <div class="w-full text-center">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <%= t('card.deposit_address') %>
+            </p>
+            <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1.5">
+              <span class="font-mono text-xs text-slate-700 truncate px-2 flex-1" id="mc_direct_deposit_addr">
+                <%= cardData.address %>
+              </span>
+              <button type="button" id="mc_copy_direct_addr"
+                class="p-1.5 bg-slate-100 text-slate-600 rounded flex-shrink-0 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <i class="ph-bold ph-copy"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
+          <i class="ph-bold ph-warning-circle text-amber-600 mt-0.5 shrink-0"></i>
+          <p class="text-[10px] text-amber-800 leading-relaxed">
+            <%= t('card.warning_direct_deposit') %>
+          </p>
+        </div>
+      </div>
+
+      <!-- BRIDGE -->
+      <div data-deposit-panel="bridge" class="deposit-panel hidden space-y-4" id="bridgeDepositPanel">
+        <p class="text-xs text-slate-500 leading-relaxed">
+          <%= t('card.bridge_deposit_desc') %>
+        </p>
+        <div class="space-y-3">
+          <div class="relative" id="source-selector-container">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">
+              <%= t('card.source_network_asset') %>
+            </label>
+            <button type="button" id="source-dropdown-btn"
+              class="w-full flex items-center justify-between px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg hover:border-indigo-400 transition-all">
+              <div class="flex items-center gap-2" id="selected-source-display">
+                <div class="w-5 h-5 rounded-full bg-slate-200"></div>
+                <span class="text-sm text-slate-400"><%= t('card.select_source') %></span>
+              </div>
+              <i class="ph ph-caret-down text-slate-400"></i>
+            </button>
+            <div id="source-dropdown-menu"
+              class="hidden absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+              <div class="p-2 border-b border-slate-100">
+                <input type="text" id="source-search" placeholder="<%= t('card.search_network_or_token') %>"
+                  class="w-full px-3 py-1.5 text-sm bg-slate-50 border-none focus:ring-0 outline-none rounded-md">
+              </div>
+              <div class="max-h-60 overflow-y-auto mc-scrollbar" id="source-options-list"></div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <%= t('card.amount_to_deposit') %>
+            </label>
+            <div class="relative group">
+              <input type="number" id="bridge-amount" placeholder="0.00"
+                class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap" />
+              <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">
+                <img src="" class="w-4 h-4 rounded-full hidden selected-asset-logo">
+                <span class="text-xs font-bold text-slate-600 selected-asset-symbol">---</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <%= t('card.source_address') %>
+            </label>
+            <div class="relative group">
+              <input type="text" id="source-address" placeholder="0x..."
+                class="mt-1 w-full px-3 py-2 text-sm outline-none alternate-wrap" />
+              <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">
+                <img src="" class="w-4 h-4 rounded-full hidden selected-asset-logo">
+                <span class="text-xs font-bold text-slate-600 selected-asset-symbol">---</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="quote-details"
+          class="hidden bg-slate-50 rounded-xl p-4 text-xs text-slate-500 space-y-3 border border-slate-200 animate__animated animate__fadeIn">
+          <div class="flex justify-between items-center">
+            <span><%= t('card.bridge_provider') %></span>
+            <span class="font-bold text-slate-700 flex items-center gap-1">
+              Layerswap <i class="ph-fill ph-lightning text-yellow-500"></i>
+            </span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span><%= t('card.estimated_fees') %></span>
+            <span class="font-bold text-slate-700" id="quote-fee">$0.00</span>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+            <span class="font-bold text-slate-700"><%= t('card.you_will_receive') %></span>
+            <span class="text-sm font-black text-emerald-600" id="quote-receive-amount">~ 0.00 STRK</span>
+          </div>
+        </div>
+
+        <button type="button"
+          class="w-full py-2.5 rounded-lg border-2 border-indigo-100 bg-indigo-50 text-indigo-600 font-semibold text-xs hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 startBridgeDeposit">
+          <i class="ph-bold ph-wallet"></i>
+          <%= t('card.deposit_with_bridge') %>
+        </button>
+      </div>
+
+      <!-- P2P -->
+      <div data-deposit-panel="p2p" class="deposit-panel hidden space-y-3">
+        <p class="text-xs bg-emerald-50 text-emerald-800 p-2.5 rounded-lg leading-relaxed">
+          Generate a payment link for someone else to fund this card.
+        </p>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Amount (USD)</label>
+          <input id="p2p_amount"
+            class="w-full px-3 py-2.5 text-sm outline-none alternate-wrap bg-slate-50 border border-slate-200 rounded-lg focus:border-emerald-500"
+            placeholder="0.00" />
+        </div>
+        <button type="button" id="mc_generate_p2p"
+          class="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
+          <i class="ph-bold ph-link"></i>
+          Generate Payment Link
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  window.__CARD_LANG = {
+    bridge_title_warning:         '<%= t("card.bridge_title_warning") %>',
+    bridge_desc_warning:          '<%= t("card.bridge_desc_warning") %>',
+    bridge_title_warning_confirm: '<%= t("card.bridge_title_warning_confirm") %>',
+    source_address_required:      '<%= t("card.source_address_required") %>',
+    invalid_bridge_config:        '<%= t("card.invalid_bridge_config") %>',
+    bridge_payment_waiting:       '<%= t("card.bridge_payment_waiting") %>',
+    bridge_payment_pending:       '<%= t("card.bridge_payment_pending") %>',
+    bridge_payment_pending_desc:  '<%= t("card.bridge_payment_pending_desc") %>',
+    bridge_payment_failed:        '<%= t("card.bridge_payment_failed") %>',
+    bridge_payment_failed_desc:   '<%= t("card.bridge_payment_failed_desc") %>',
+    bridge_payment_received:      '<%= t("card.bridge_payment_received") %>',
+    bridge_payment_received_desc: '<%= t("card.bridge_payment_received_desc") %>',
+  };
+
+  (function () {
+    var tabs   = document.querySelectorAll('#cardDepositModal .deposit-tab');
+    var panels = document.querySelectorAll('#cardDepositModal [data-deposit-panel]');
+
+    function activateTab(tab) {
+      tabs.forEach(function (t) {
+        t.classList.remove('bg-white', 'shadow-sm', 'text-slate-900');
+        t.classList.add('text-slate-500');
+      });
+      tab.classList.remove('text-slate-500');
+      tab.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
+      var target = tab.getAttribute('data-deposit-tab');
+      panels.forEach(function (p) {
+        p.classList.toggle('hidden', p.getAttribute('data-deposit-panel') !== target);
+      });
+    }
+
+    var _bridgeInitialized = false;
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        activateTab(t);
+        if (t.getAttribute('data-deposit-tab') === 'bridge' && !_bridgeInitialized) {
+          _bridgeInitialized = true;
+          var cardId = document.getElementById('cardDepositModal').getAttribute('data-card-id');
+          if (typeof initBridgeFlow === 'function') initBridgeFlow(cardId);
+        }
+      });
+    });
+
+    var first = document.querySelector('#cardDepositModal .deposit-tab[data-deposit-tab="direct"]');
+    if (first) activateTab(first);
+
+    setTimeout(function () {
+      var body = document.getElementById('mc_deposit_body');
+      if (body) body.classList.add('mc-tab-enter-active');
+    }, 30);
+  })();
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('#mc_copy_direct_addr')) {
+      e.preventDefault();
+      var addr = document.getElementById('mc_direct_deposit_addr').textContent.trim();
+      navigator.clipboard.writeText(addr).then(function () {
+        var btn = document.getElementById('mc_copy_direct_addr');
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="ph-bold ph-check text-emerald-600"></i>';
+        btn.classList.add('bg-emerald-50');
+        setTimeout(function () { btn.innerHTML = orig; btn.classList.remove('bg-emerald-50'); }, 1500);
+      });
+    }
+    if (e.target.closest('[data-modal-close]')) {
+      var modal = document.getElementById('cardDepositModal');
+      if (modal) { modal.style.opacity = '0'; setTimeout(function () { modal.remove(); }, 300); }
+    }
+  });
+
+  document.addEventListener('input', function (e) {
+    if (e.target && e.target.id === 'bridge-amount') {
+      var val = parseFloat(e.target.value);
+      currentSwapConfig.amount = isNaN(val) ? 0 : val;
+      if (typeof processQuoteFetch === 'function') processQuoteFetch();
+    }
+  });
+
+  window.initManageCardModal = function () {};
+</script>

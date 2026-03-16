@@ -184,6 +184,7 @@ pub struct FraudScore {
 pub struct TokenBalance {
     pub token: ContractAddress,
     pub balance: u256,
+    pub contract_balance: u256,
     pub last_updated: u64,
 }
 

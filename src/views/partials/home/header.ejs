@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title><%= typeof title !== 'undefined' ? title : 'Dashboard' %></title>
+    <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/images/logo/favicon.png" rel="icon" type="image/png" />
+    <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/fonts/style.css" rel="stylesheet">
+    <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/css/bundle.css" rel="stylesheet">
+    <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/plugin/plugin.min.css" rel="stylesheet">
+    <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/css/main.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,700&display=swap" rel="stylesheet">
+    <style>
+        .mode-toggle-track {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background: #e4e4e7;
+            border-radius: 9999px;
+            transition: background .2s;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .mode-toggle-track.is-live { background: #16a34a; }
+        .mode-toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 9999px;
+            transition: transform .2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.2);
+        }
+        .mode-toggle-track.is-live .mode-toggle-thumb { transform: translateX(16px); }
+        #user-menu-trigger { cursor: pointer; user-select: none; }
+        [id$="-dropdown"] { display: none; }
+        [id$="-dropdown"].dropdown-active { display: block; }
+    </style>
+</head>
+<body class="bg-brandGray text-gray-900 font-sans antialiased min-h-screen flex flex-col">
+<header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-zinc-200">
+    <div class="max-w-7xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
+        <a href="/home" class="flex items-center gap-2.5 shrink-0 no-underline">
+            <div class="w-7 h-7 bg-brandBlack rounded-lg flex items-center justify-center">
+                <img src="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/images/logo/logo-white.png" class="w-4 h-4 object-contain">
+            </div>
+            <span class="font-bold text-[15px] text-brandBlack tracking-tight">ZionDefi</span>
+        </a>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-zinc-100 rounded-full px-3 py-1.5">
+                <label for="go-live-toggle" class="flex items-center gap-2 cursor-pointer">
+                    <div class="mode-toggle-track <%= typeof is_live !== 'undefined' && is_live === 'checked' ? 'is-live' : '' %>" id="mode-toggle-track">
+                        <div class="mode-toggle-thumb"></div>
+                    </div>
+                    <input type="checkbox" id="go-live-toggle" class="sr-only" <%= typeof is_live !== 'undefined' ? is_live : '' %>>
+                </label>
+                <span id="live-text" class="text-xs font-semibold <%= typeof is_live !== 'undefined' && is_live === 'checked' ? 'text-green-600' : 'text-zinc-500' %>">
+                    <%= typeof is_live !== 'undefined' && is_live === 'checked' ? 'Live' : 'Test' %>
+                </span>
+            </div>
+            <div class="relative">
+                <button id="user-menu-trigger" class="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 hover:bg-zinc-100 transition">
+                    <div class="w-7 h-7 bg-brandDarkGray rounded-full flex items-center justify-center text-white text-[11px] font-bold uppercase">
+                        <%= typeof user !== 'undefined' && user ? user.name.charAt(0) : 'U' %>
+                    </div>
+                    <span class="text-[13px] font-medium text-zinc-700 hidden sm:block max-w-[100px] truncate">
+                        <%= typeof user !== 'undefined' && user ? user.name.split(' ')[0] : 'Account' %>
+                    </span>
+                    <i class="ph ph-caret-down text-[12px] text-zinc-400" id="user-caret"></i>
+                </button>
+                <div id="user-dropdown" class="absolute right-0 top-11 w-48 bg-white border border-zinc-200 rounded-xl shadow-xl z-50">
+                    <div class="px-4 py-3 border-b border-zinc-100">
+                        <p class="text-xs font-semibold text-zinc-800 truncate"><%= typeof user !== 'undefined' && user ? user.name : '' %></p>
+                        <p class="text-[11px] text-zinc-400 truncate mt-0.5"><%= typeof user !== 'undefined' && user && user.email ? user.email : '' %></p>
+                    </div>
+                    <div class="p-1.5">
+                        <a href="/home/settings" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-zinc-700 hover:bg-zinc-50 transition no-underline">
+                            <i class="ph ph-gear text-zinc-400"></i> Settings
+                        </a>
+                        <a href="/logout" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition no-underline">
+                            <i class="ph ph-sign-out text-red-400"></i> Sign out
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<main class="flex-1 flex flex-col">

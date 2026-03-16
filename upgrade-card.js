@@ -156,13 +156,15 @@ async function main() {
 
     // 6. Execute upgrade via starknet.js Account directly (bypass Starkzap gas issues)
     console.log('  [6/6] Sending upgrade transaction …');
-    const signerAddr = opts['owner-addr'] || process.env.TESTNET_OWNER_ACCOUNT_ADDRESS;
-    const signerKey  = opts['owner-key']  || process.env.TESTNET_OWNER_PRIVATE_KEY;
+    // Prefer relayer account (configurable via env or --relayer-addr/--relayer-key),
+    // fall back to owner account for compatibility.
+    const signerAddr = opts['relayer-addr'] || process.env.TESTNET_RELAYER_ACCOUNT_ADDRESS || opts['owner-addr'] || process.env.TESTNET_OWNER_ACCOUNT_ADDRESS;
+    const signerKey  = opts['relayer-key']  || process.env.TESTNET_RELAYER_PRIVATE_KEY  || opts['owner-key']  || process.env.TESTNET_OWNER_PRIVATE_KEY;
 
     if (!signerAddr || !signerKey) {
-        exit('Transaction signer not configured. Set TESTNET_OWNER_ACCOUNT_ADDRESS / TESTNET_OWNER_PRIVATE_KEY in .env or use --owner-addr / --owner-key');
+        exit('Transaction signer not configured. Set TESTNET_RELAYER_ACCOUNT_ADDRESS / TESTNET_RELAYER_PRIVATE_KEY (or owner equivalents) in .env or use --relayer-addr / --relayer-key');
     }
-    console.log(`        Tx signer      : ${signerAddr}`);
+    console.log(`        Tx signer      : ${signerAddr} (relayer preferred)`);
 
     const rpcUrl = process.env.TESTNET_STARKNET_RPC_URL;
     if (!rpcUrl) exit('TESTNET_STARKNET_RPC_URL not set in .env');

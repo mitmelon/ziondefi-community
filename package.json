@@ -43,7 +43,7 @@
     "@fastify/websocket": "^11.2.0",
     "@thumbmarkjs/thumbmarkjs": "^1.6.4",
     "amqplib": "^0.10.9",
-    "axios": "^1.13.5",
+    "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
     "bybit-api": "^4.6.1",
     "cheerio": "^1.2.0",

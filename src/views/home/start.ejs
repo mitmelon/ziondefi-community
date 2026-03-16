@@ -1,0 +1,85 @@
+<%- include('../partials/home/header') %>
+<div id="view-onboarding" class="flex-1 flex flex-col items-center justify-center px-6 py-16 <%= (user && user.stage !== 'boarding') ? 'hidden' : '' %>">
+    <div class="w-full max-w-lg">
+        <p class="text-center text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-6">Get started &mdash; it&rsquo;s free</p>
+        <div class="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+            <div class="relative bg-brandBlack px-8 pt-8 pb-6 overflow-hidden">
+                <div class="absolute -top-10 -left-10 w-48 h-48 bg-white opacity-[0.03] rounded-full"></div>
+                <div class="absolute -bottom-12 -right-8 w-56 h-56 bg-white opacity-[0.03] rounded-full"></div>
+                <div class="flex justify-between items-start mb-8">
+                    <span class="text-white/90 font-bold italic tracking-widest text-sm">ZionDefi</span>
+                    <div class="flex gap-0.5">
+                        <div class="w-7 h-7 rounded-full bg-white/20"></div>
+                        <div class="w-7 h-7 rounded-full bg-white/10 -ml-3"></div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <p class="text-[9px] uppercase tracking-widest text-white/40 mb-1">Card Address</p>
+                    <p class="font-mono text-sm text-white/70 tracking-wider">0x &#8231;&#8231;&#8231;&#8231; &nbsp;&#8231;&#8231;&#8231;&#8231; &nbsp;&#8231;&#8231;&#8231;&#8231; &nbsp;&#8231;&#8231;&#8231;&#8231;</p>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-[9px] uppercase tracking-widest text-white/40 mb-0.5">Cardholder</p>
+                        <p class="text-sm font-semibold text-white/80 uppercase tracking-wide"><%= user ? user.name : 'Your Name' %></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] uppercase tracking-widest text-white/40 mb-0.5">Balance</p>
+                        <p class="text-sm font-semibold text-white/50">&mdash;</p>
+                    </div>
+                </div>
+            </div>
+            <div class="px-8 py-8">
+                <h1 class="text-xl font-bold text-zinc-900 mb-1.5">Deploy your ZionDefi Card</h1>
+                <p class="text-sm text-zinc-500 leading-relaxed mb-6">
+                    Experience the future of finance with your decentralized card. Some interesting features include:
+                </p>
+                <ul class="space-y-2.5 mb-8">
+                    <li class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center mt-0.5 shrink-0">
+                            <i class="ph-bold ph-check text-[10px] text-zinc-700"></i>
+                        </div>
+                        <span class="text-sm text-zinc-600">Earning smart yield on your crypto holdings using Zara.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center mt-0.5 shrink-0">
+                            <i class="ph-bold ph-check text-[10px] text-zinc-700"></i>
+                        </div>
+                        <span class="text-sm text-zinc-600">Savings opportunities with automatic compounding through Zara.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center mt-0.5 shrink-0">
+                            <i class="ph-bold ph-check text-[10px] text-zinc-700"></i>
+                        </div>
+                        <span class="text-sm text-zinc-600">Multi-currency balances and auto swapping</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center mt-0.5 shrink-0">
+                            <i class="ph-bold ph-check text-[10px] text-zinc-700"></i>
+                        </div>
+                        <span class="text-sm text-zinc-600">Spend anywhere, Program card controls and more</span>
+                    </li>
+                </ul>
+                <button id="onboarding-deploy-btn"
+                    class="create-card-btn w-full bg-brandBlack text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-zinc-800 active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
+                    data-action="create" data-card-id="none">
+                    <i class="ph-bold ph-rocket-launch"></i>
+                    Deploy My Card
+                </button>
+
+                <p class="text-center text-[11px] text-zinc-400 mt-4">Let your card create many opportunities for you. </p>
+            </div>
+        </div>
+        <div class="flex items-center justify-center gap-6 mt-6">
+            <div class="flex items-center gap-1.5 text-xs text-zinc-400">
+                <i class="ph ph-shield-check text-zinc-300 text-base"></i> Non-custodial
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-zinc-400">
+                <i class="ph ph-lock text-zinc-300 text-base"></i> Self-sovereign
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-zinc-400">
+                <i class="ph ph-lightning text-zinc-300 text-base"></i> Instant
+            </div>
+        </div>
+    </div>
+</div>
+<%- include('../partials/home/footer') %>

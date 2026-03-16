@@ -1,9 +1,0 @@
-{"ts":1773506001359,"event":"script_start","card":"0x360b3bbfddd32d5ab456ba3621e14f14bf8063c8541ffaebbccb9702db3022e","token":"0x0512feac6339ff7889822cb5aa2a86c848e9d392bb0e3e237c008674feed8343","amount":"2","isLive":false,"pool":false,"callerPk":false}
-{"ts":1773506049573,"event":"service_created","network":"sepolia"}
-{"ts":1773506051444,"event":"got_request_counter","counter":["0x0"]}
-{"ts":1773506052141,"event":"got_transfer_delay","delay":["0x15180"]}
-{"ts":1773506052461,"event":"got_relayer_yield_access","access":["0x1"]}
-{"ts":1773506052472,"event":"withdraw_error","error":"Error: Relayer address not configured"}
-{"ts":1773506059625,"event":"discover_pools","pools":{"tokens":4,"validators":18,"pools":25}}
-{"ts":1773506059638,"event":"stake_skipped_no_pk","chosenPool":"[object Object]"}
-{"ts":1773506059640,"event":"script_end"}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title><%= t('register.title', { app_name: app_name }) %></title>
+  <meta name="description" content="<%= t('register.description', { app_name: app_name }) %>" />
+  <meta name="keywords" content="<%= t('register.keywords', { app_name: app_name }) %>" />
+  <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/images/logo/favicon.png" rel="icon" type="image/png" />
+  <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/fonts/style.css" rel="stylesheet">
+  <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/css/bundle.css" rel="stylesheet">
+  <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/plugin/plugin.min.css" rel="stylesheet">
+  <link href="<%= typeof root !== 'undefined' ? root : '' %>public/home/ui/css/main.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+      /* Hide scrollbar for cleaner look */
+      ::-webkit-scrollbar { width: 0px; background: transparent; }
+      .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+  </style>
+</head>

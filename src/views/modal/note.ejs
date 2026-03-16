@@ -1,0 +1,26 @@
+<div id="notificationModal"
+    class="fixed inset-0 z-50 hidden overflow-y-auto flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm transition-opacity duration-300"
+    role="dialog" aria-modal="true">
+    <div
+        class="custom-modal-dialog medium animate__animated animate__slideInLeft flex h-auto w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-lg dark:bg-gray-800">
+        <button type="button"
+            class="absolute top-6 right-6 z-10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            data-modal-close>
+            <span class="sr-only"><%= t('close') %></span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="h-6 w-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <div class="w-full">
+            <div class="p-6 text-center">
+                <div
+                    class="modal-icon-wrapper inline-flex items-center justify-center w-16 h-16 rounded-full mx-auto mb-4">
+                    <i class="modal-icon ph-bold ph-check-circle"></i>
+                </div>
+                <h3 class="mb-2 text-lg font-medium text-gray-900 dark:text-white"><%= title %></h3>
+                <p class="mb-4 text-sm text-gray-500 dark:text-gray-400"><%= message %></p>
+            </div>
+        </div>
+    </div>
+</div>

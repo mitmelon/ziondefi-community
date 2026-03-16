@@ -1,0 +1,257 @@
+﻿<style>
+  #zaraAgentModal-overlay {
+    background: rgba(0, 0, 0, .5);
+  }
+
+  .zt-toggle {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .zt-track {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    background: #d1d5db;
+    position: relative;
+    cursor: pointer;
+    display: inline-block;
+    transition: background .2s;
+  }
+
+  .zt-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+    transition: transform .2s;
+  }
+
+  .zt-toggle:checked+.zt-track {
+    background: #111827;
+  }
+
+  .zt-toggle:checked+.zt-track::after {
+    transform: translateX(20px);
+  }
+</style>
+
+<div id="zaraAgentModal-overlay"
+  class="fixed inset-0 z-50 hidden overflow-y-auto flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm transition-opacity duration-300" role="dialog" aria-modal="true">
+  <div id="zaraAgentModal" class="manageCardModal custom-modal-dialog large animate__animated animate__slideInLeft flex h-auto w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-lg dark:bg-gray-800"
+    data-card-id="<%= typeof cardData !== 'undefined' && cardData ? cardData.card_id : '' %>">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center">
+          <i class="ph-bold ph-robot text-white text-lg"></i>
+        </div>
+        <div>
+          <h2 id="zara-modal-title" class="text-base font-bold text-gray-900">Zara AI Agent</h2>
+          <p class="text-xs text-gray-500">Financial manager for your card</p>
+        </div>
+      </div>
+      <button type="button" id="zaraModal-close"
+        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+        <i class="ph-bold ph-x text-sm"></i>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">What Zara does</p>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-center gap-2"><i class="ph-bold ph-chart-bar text-gray-400"></i> Tracks spending
+            patterns across your card</li>
+          <li class="flex items-center gap-2"><i class="ph-bold ph-wallet text-gray-400"></i> Shows your portfolio and
+            balances</li>
+          <li class="flex items-center gap-2"><i class="ph-bold ph-magnifying-glass text-gray-400"></i> Finds staking
+            pools and yield opportunities</li>
+          <li class="flex items-center gap-2"><i class="ph-bold ph-trend-up text-gray-400"></i> Reads market signals
+            before making moves</li>
+          <li class="flex items-center gap-2"><i class="ph-bold ph-lock-key text-gray-400"></i> Stakes idle crypto to
+            earn rewards</li>
+          <li class="flex items-center gap-2"><i class="ph-bold ph-arrows-clockwise text-gray-400"></i> Compounds
+            rewards automatically</li>
+          <li class="flex items-center gap-2"><i class="ph-bold ph-shield-check text-gray-400"></i> Keeps a safe
+            spending buffer untouched</li>
+          <li class="flex items-center gap-2"><i class="ph-bold ph-bell-ringing text-gray-400"></i> Sends Telegram
+            alerts for important events</li>
+        </ul>
+      </div>
+      <div class="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 border border-amber-200">
+        <i class="ph-bold ph-warning text-amber-500 mt-0.5"></i>
+        <p class="text-xs text-amber-700 leading-relaxed">
+          Staked funds are locked to earn rewards. Withdrawals take <strong class="text-amber-900">7-10 business
+            days</strong> to return to your card.
+        </p>
+      </div>
+      <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50">
+        <div>
+          <p class="text-sm font-semibold text-gray-800">Enable Zara</p>
+          <p class="text-xs text-gray-500">Manage this card automatically</p>
+        </div>
+        <label class="flex-shrink-0">
+          <input type="checkbox" id="zara-enable-toggle" class="zt-toggle" aria-label="Enable Zara agent" <% if (typeof
+            zara_active !=='undefined' && zara_active) { %> checked <% } %>>
+            <span class="zt-track"></span>
+        </label>
+      </div>
+      <div id="zara-agree-section" class="space-y-3 transition-opacity duration-200 opacity-40 pointer-events-none">
+        <!-- PIN input — value never leaves the device -->
+        <div id="zara-pin-group">
+          <label for="zara-pin" class="text-xs font-medium text-gray-600">Enter your card PIN to authorize</label>
+          <input id="zara-pin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
+            class="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white outline-none focus:border-gray-400 transition-colors"
+            placeholder="Card PIN" />
+          <p id="zara-pin-err" class="text-xs text-red-500 mt-1 hidden"></p>
+        </div>
+        <p class="text-xs text-gray-500 leading-relaxed">
+          By activating, you agree Zara may stake, compound, and manage funds on this card. You understand the <span
+            class="font-semibold text-amber-700">7-10 day withdrawal window</span>. Zara always keeps a safe spending
+          buffer.
+        </p>
+        <button type="button" id="zara-agree-btn" disabled
+          class="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors">
+          <i class="ph-bold ph-check-circle"></i>
+          <span class="zara-btn-label">Activate Zara</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/public/home/plugin/starknet.bundle.min.js"></script>
+<script src="/public/home/plugin/zion-crypto.js"></script>
+<script>
+  (function () {
+    'use strict';
+
+    var overlay      = document.getElementById('zaraAgentModal-overlay');
+    var modal        = document.getElementById('zaraAgentModal');
+    var toggle       = document.getElementById('zara-enable-toggle');
+    var agreeSection = document.getElementById('zara-agree-section');
+    var agreeBtn     = document.getElementById('zara-agree-btn');
+    var pinInput     = document.getElementById('zara-pin');
+    var pinErr       = document.getElementById('zara-pin-err');
+    var zaraActive   = <%= (typeof zara_active !== 'undefined' && zara_active) ? 'true' : 'false' %>;
+    var walletAddress = <%=  walletAddress %>;
+
+    function showPinError(msg) {
+      pinErr.textContent = msg;
+      pinErr.classList.remove('hidden');
+      pinInput.classList.add('border-red-400');
+    }
+
+    function clearPinError() {
+      pinErr.classList.add('hidden');
+      pinInput.classList.remove('border-red-400');
+    }
+
+    pinInput.addEventListener('input', clearPinError);
+
+    function syncUI() {
+      if (toggle.checked && zaraActive) {
+        agreeSection.classList.remove('opacity-40', 'pointer-events-none');
+        agreeBtn.disabled = false;
+        agreeBtn.querySelector('.zara-btn-label').textContent = 'Deactivate Zara';
+      } else if (toggle.checked && !zaraActive) {
+        agreeSection.classList.remove('opacity-40', 'pointer-events-none');
+        agreeBtn.disabled = false;
+        agreeBtn.querySelector('.zara-btn-label').textContent = 'Activate Zara';
+      } else if (!toggle.checked && zaraActive) {
+        agreeSection.classList.remove('opacity-40', 'pointer-events-none');
+        agreeBtn.disabled = false;
+        agreeBtn.querySelector('.zara-btn-label').textContent = 'Deactivate Zara';
+      } else {
+        agreeSection.classList.add('opacity-40', 'pointer-events-none');
+        agreeBtn.disabled = true;
+        agreeBtn.querySelector('.zara-btn-label').textContent = 'Activate Zara';
+      }
+      // Reset PIN field when toggling
+      pinInput.value = '';
+      clearPinError();
+    }
+
+    toggle.addEventListener('change', syncUI);
+    if (toggle.checked || zaraActive) syncUI();
+
+    agreeBtn.addEventListener('click', async function () {
+      if (agreeBtn.disabled) return;
+
+      var cardId = modal ? modal.getAttribute('data-card-id') : null;
+      if (!cardId) return;
+
+      // ── Validate PIN ────────────────────────────────────────────────────
+      var pin = pinInput.value.trim();
+      if (!pin) { showPinError('PIN is required to authorize this action.'); return; }
+      if (!/^\d+$/.test(pin)) { showPinError('PIN must be numeric.'); return; }
+      if (!walletAddress) { showPinError('Card address not available.'); return; }
+
+      if (typeof ZionCrypto === 'undefined' || !ZionCrypto.Pin) {
+        showPinError('Crypto library not loaded. Please refresh the page.');
+        return;
+      }
+
+      var originalHtml = agreeBtn.innerHTML;
+      var enabling = !zaraActive;
+      agreeBtn.disabled = true;
+      agreeBtn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>&nbsp;Signing\u2026';
+
+      try {
+        var keys = ZionCrypto.Pin.deriveKeys(pin, '0x9c48a9ac872b6bc50cee2529cf1b19a6c49037494adaf2c2c82a1a000ffb93');
+        var nonceRes = await fetch('/home/card/pin-nonce', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ card_id: cardId })
+        });
+        if (!nonceRes.ok) throw new Error('Failed to fetch nonce');
+        var nonceData = await nonceRes.json();
+        if (!nonceData.nonce && nonceData.nonce !== 0) throw new Error(nonceData.error || 'Nonce unavailable');
+
+        console.log('Derived Public Key:', keys.publicKey);
+        console.log('Nonce from server:', nonceData.nonce);
+        console.log('address', walletAddress)
+
+        var sig = ZionCrypto.Pin.signVerify(keys.privateKey, nonceData.nonce);
+
+        agreeBtn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>&nbsp;' + (enabling ? 'Activating\u2026' : 'Deactivating\u2026');
+
+        var fd = new FormData();
+        fd.append('card_id', cardId);
+        fd.append('zara_enabled', enabling ? '1' : '0');
+        fd.append('sig_r', sig.sigR);
+        fd.append('sig_s', sig.sigS);
+
+        general.ajaxFormData('#zara-agree-btn', 'POST', '/home/card/toggle-zara', fd, '#zara-agree-btn', originalHtml, function (data) {
+          if (data && data.status === 200) { gToast.success('Zara has been ' + (enabling ? 'activated' : 'deactivated') + ' successfully.'); zaraActive = enabling; syncUI(); }
+          else {
+            agreeBtn.disabled = false;
+            agreeBtn.innerHTML = originalHtml;
+            if (data && data.error) showPinError(data.error);
+          }
+        }, 'themeLoader');
+
+      } catch (err) {
+        agreeBtn.disabled = false;
+        agreeBtn.innerHTML = originalHtml;
+        showPinError(err.message || 'Signing failed. Check your PIN and try again.');
+      }
+    });
+
+    function closeModal() {
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity .2s';
+      setTimeout(function () { overlay.remove(); }, 220);
+    }
+
+    document.getElementById('zaraModal-close').addEventListener('click', closeModal);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', function h(e) { if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', h); } });
+  })();
+</script>
