@@ -1027,7 +1027,6 @@ mod ZionDefiCard {
             let this_contract = get_contract_address();
 
             let actual_bal = IERC20Dispatcher { contract_address: token }.balance_of(this_contract);
-            let tracked_bal = self.token_balances.entry(token).read();
             self.token_balances.entry(token).write(actual_bal);
             
             let current_bal = self.token_balances.entry(token).read();
