@@ -410,7 +410,7 @@ Contributions welcome in anomaly detection heuristics, mobile NFC integration, e
 
 **`/contracts`** — MIT License. All Cairo smart contracts are open source.
 
-**Backend, worker, frontend, mobile** — Commercial License. Contact [ziondefi.work.gd](https://ziondefi.com) for licensing inquiries.
+**Backend, worker, frontend, mobile** — Commercial License. Contact [ziondefi.com](https://ziondefi.com) for licensing inquiries.
 
 ---
 
